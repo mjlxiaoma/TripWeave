@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS trip_shares, trip_generation_tasks, ai_tool_calls, ai_messages, ai_conversations, restaurants, hotels, activities, locations, trip_days, trip_preferences, trip_members, trips, user_preferences, users;
