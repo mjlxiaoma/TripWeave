@@ -16,14 +16,14 @@ var ErrNotFound = errors.New("user not found")
 
 // User is the core user entity.
 type User struct {
-	ID          string    `json:"id"`
-	Email       string    `json:"email"`
-	PasswordHash string   `json:"-"`
-	DisplayName string    `json:"display_name"`
-	AvatarURL   *string   `json:"avatar_url"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"-"`
+	DisplayName  string    `json:"display_name"`
+	AvatarURL    *string   `json:"avatar_url"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // Repository provides user persistence.

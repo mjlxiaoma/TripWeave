@@ -16,7 +16,8 @@ var ErrRefreshNotFound = errors.New("refresh token not found")
 
 // RefreshStore persists hashed opaque refresh tokens in Redis.
 // Layout: "refresh:token:<sha256>" -> userID  (TTL = refresh lifetime)
-//         "refresh:user:<userID>" -> set of hashes (for revoke-all)
+//
+//	"refresh:user:<userID>" -> set of hashes (for revoke-all)
 type RefreshStore struct {
 	rdb *redis.Client
 	ttl time.Duration
@@ -32,7 +33,7 @@ func HashToken(token string) string {
 	return hex.EncodeToString(h[:])
 }
 
-func tokenKey(hash string) string { return "refresh:token:" + hash }
+func tokenKey(hash string) string  { return "refresh:token:" + hash }
 func userKey(userID string) string { return "refresh:user:" + userID }
 
 // Save stores a refresh token mapped to its user.

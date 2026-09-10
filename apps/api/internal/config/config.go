@@ -10,18 +10,18 @@ import (
 
 // Config holds all runtime configuration.
 type Config struct {
-	Addr         string
-	DatabaseURL  string
-	RedisAddr    string
+	Addr          string
+	DatabaseURL   string
+	RedisAddr     string
 	RedisPassword string
-	JWTSecret    string
-	AccessTTL    time.Duration
-	RefreshTTL   time.Duration
-	AIAPIKey     string
-	MapAPIKey    string
-	CORSOrigins  []string
-	MigrateDir   string
-	RunMigrate   bool
+	JWTSecret     string
+	AccessTTL     time.Duration
+	RefreshTTL    time.Duration
+	AIAPIKey      string
+	MapAPIKey     string
+	CORSOrigins   []string
+	MigrateDir    string
+	RunMigrate    bool
 }
 
 func getenv(key, fallback string) string {
@@ -78,7 +78,3 @@ func splitComma(s string) []string {
 	}
 	return out
 }
-
-
-
-

@@ -1,3 +1,0 @@
-// Package shared ...
-
-package shared

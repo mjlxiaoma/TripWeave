@@ -15,6 +15,7 @@ import (
 
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/day"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/trip"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/user"
@@ -60,6 +61,9 @@ func main() {
 
 	trips := trip.NewRepository(pool)
 	tripHandler := trip.NewHandler(trips)
+
+	days := day.NewRepository(pool)
+	dayHandler := day.NewHandler(days, trips)
 	requireAuth := auth.RequireAuth(cfg.JWTSecret)
 
 	r := chi.NewRouter()
@@ -95,6 +99,14 @@ func main() {
 		authed.Get("/trips/{id}", tripHandler.Get)
 		authed.Patch("/trips/{id}", tripHandler.Update)
 		authed.Delete("/trips/{id}", tripHandler.Delete)
+		authed.Get("/trips/{id}/days", dayHandler.ListDays)
+		authed.Post("/trips/{id}/days", dayHandler.CreateDay)
+		authed.Patch("/trips/{id}/days/{dayId}", dayHandler.UpdateDay)
+		authed.Delete("/trips/{id}/days/{dayId}", dayHandler.DeleteDay)
+		authed.Post("/days/{dayId}/activities", dayHandler.CreateActivity)
+		authed.Post("/days/{dayId}/activities/reorder", dayHandler.ReorderActivities)
+		authed.Patch("/activities/{id}", dayHandler.UpdateActivity)
+		authed.Delete("/activities/{id}", dayHandler.DeleteActivity)
 	})
 
 	srv := &http.Server{

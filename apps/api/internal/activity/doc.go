@@ -1,3 +1,0 @@
-// Package activity ...
-
-package activity

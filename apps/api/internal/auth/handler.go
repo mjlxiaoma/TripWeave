@@ -16,9 +16,9 @@ import (
 
 // Handler wires auth HTTP endpoints.
 type Handler struct {
-	users   *user.Repository
-	refresh *RefreshStore
-	secret  string
+	users      *user.Repository
+	refresh    *RefreshStore
+	secret     string
 	accessTTL  time.Duration
 	refreshTTL time.Duration
 }
@@ -53,10 +53,10 @@ type refreshRequest struct {
 }
 
 type tokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int64  `json:"expires_in"`
+	AccessToken  string  `json:"access_token"`
+	RefreshToken string  `json:"refresh_token"`
+	TokenType    string  `json:"token_type"`
+	ExpiresIn    int64   `json:"expires_in"`
 	User         userDTO `json:"user"`
 }
 
@@ -220,4 +220,3 @@ func decodeJSON(r *http.Request, v any) error {
 	dec := jsonDecoder(r.Body)
 	return dec.Decode(v)
 }
-

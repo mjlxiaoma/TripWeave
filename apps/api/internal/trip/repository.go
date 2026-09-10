@@ -17,16 +17,16 @@ var ErrNotFound = errors.New("trip not found")
 
 // Trip is the core trip entity. Dates are "2006-01-02" strings (nullable).
 type Trip struct {
-	ID             string     `json:"id"`
-	OwnerID        string     `json:"owner_id"`
-	Title          string     `json:"title"`
-	Destination    *string    `json:"destination"`
-	StartDate      *string    `json:"start_date"`
-	EndDate        *string    `json:"end_date"`
-	TravelersCount *int       `json:"travelers_count"`
-	Status         string     `json:"status"`
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
+	ID             string    `json:"id"`
+	OwnerID        string    `json:"owner_id"`
+	Title          string    `json:"title"`
+	Destination    *string   `json:"destination"`
+	StartDate      *string   `json:"start_date"`
+	EndDate        *string   `json:"end_date"`
+	TravelersCount *int      `json:"travelers_count"`
+	Status         string    `json:"status"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // Preference holds per-trip planning preferences (1:1 with trip).

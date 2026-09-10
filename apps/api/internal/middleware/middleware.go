@@ -111,4 +111,3 @@ func CORS(origins []string) func(http.Handler) http.Handler {
 		})
 	}
 }
-

@@ -57,4 +57,3 @@ func VerifyPassword(password, encoded string) bool {
 	actual := argon2.IDKey([]byte(password), salt, iterations, memory, threads, uint32(len(expected)))
 	return subtle.ConstantTimeCompare(actual, expected) == 1
 }
-
