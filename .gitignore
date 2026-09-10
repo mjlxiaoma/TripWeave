@@ -16,6 +16,12 @@ apps/api/api
 # local design docs (not pushed to GitHub)
 docs/
 
+# local tooling artifacts
+.codex-run/
+.playwright-mcp/
+.pnpm-store/
+/*.png
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
@@ -26,6 +27,9 @@ import (
 )
 
 func main() {
+	// 本地开发加载 apps/api/.env；生产环境使用真实环境变量，文件不存在时静默跳过
+	_ = godotenv.Load()
+
 	log := logger.New()
 	slog.SetDefault(log)
 
