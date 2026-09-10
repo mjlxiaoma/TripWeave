@@ -1,3 +1,0 @@
-// Package database ...
-
-package database

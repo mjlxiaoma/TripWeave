@@ -1,3 +1,0 @@
-// Package http ...
-
-package http

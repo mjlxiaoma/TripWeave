@@ -1,3 +1,0 @@
-// Package middleware ...
-
-package middleware

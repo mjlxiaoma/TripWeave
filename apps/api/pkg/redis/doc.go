@@ -1,3 +1,0 @@
-// Package redis ...
-
-package redis
