@@ -1,0 +1,3 @@
+// Package trip ...
+
+package trip

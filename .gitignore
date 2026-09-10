@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+apps/api/server
+apps/api/api
+*.exe
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# local design docs (not pushed to GitHub)
+docs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
