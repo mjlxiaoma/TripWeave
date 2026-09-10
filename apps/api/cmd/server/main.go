@@ -16,6 +16,7 @@ import (
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/trip"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/user"
 	"github.com/mjlxiaoma/TripWeave/apps/api/pkg/database"
 	phttp "github.com/mjlxiaoma/TripWeave/apps/api/pkg/http"
@@ -57,6 +58,10 @@ func main() {
 	refreshStore := auth.NewRefreshStore(rdb, cfg.RefreshTTL)
 	authHandler := auth.NewHandler(users, refreshStore, cfg.JWTSecret, cfg.AccessTTL, cfg.RefreshTTL)
 
+	trips := trip.NewRepository(pool)
+	tripHandler := trip.NewHandler(trips)
+	requireAuth := auth.RequireAuth(cfg.JWTSecret)
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recover(log))
@@ -82,8 +87,14 @@ func main() {
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Mount("/", authHandler.Routes())
-		api.With(auth.RequireAuth(cfg.JWTSecret)).Get("/me", authHandler.Me)
-		api.With(auth.RequireAuth(cfg.JWTSecret)).Post("/auth/logout", authHandler.Logout)
+		api.With(requireAuth).Get("/me", authHandler.Me)
+		api.With(requireAuth).Post("/auth/logout", authHandler.Logout)
+		authed := api.With(requireAuth)
+		authed.Get("/trips", tripHandler.List)
+		authed.Post("/trips", tripHandler.Create)
+		authed.Get("/trips/{id}", tripHandler.Get)
+		authed.Patch("/trips/{id}", tripHandler.Update)
+		authed.Delete("/trips/{id}", tripHandler.Delete)
 	})
 
 	srv := &http.Server{
