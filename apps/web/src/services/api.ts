@@ -1,4 +1,4 @@
-import type { AuthTokens, Envelope, User } from '../types'
+import type { AuthTokens, CreateTripPayload, Envelope, Trip, User } from '../types'
 
 const BASE: string = import.meta.env.VITE_API_BASE ?? '/api/v1'
 
@@ -115,4 +115,11 @@ export const authApi = {
       body: JSON.stringify({ refresh_token: getRefreshToken() ?? '' }),
     }),
   me: () => api<User>('/me'),
+}
+
+export const tripsApi = {
+  list: () => api<Trip[]>('/trips'),
+  get: (id: string) => api<Trip>('/trips/' + id),
+  create: (payload: CreateTripPayload) =>
+    api<Trip>('/trips', { method: 'POST', body: JSON.stringify(payload) }),
 }

@@ -23,3 +23,54 @@ export interface Envelope<T> {
   data: T | null
   error: ApiErrorDetail | null
 }
+
+// --- trips ---
+
+export type TripStatus = 'draft' | 'planning' | 'ready' | 'archived'
+
+export interface TripConstraints {
+  max_drive_hours_per_day: number
+  max_walk_km_per_day: number
+  earliest_start: string
+  latest_end: string
+  allow_hotel_change: boolean
+  budget_range: [number, number]
+}
+
+export interface TripPreference {
+  budget: number | null
+  transport_mode: string | null
+  travel_style: string | null
+  constraints: TripConstraints
+  preferences: string[]
+  natural_language: string | null
+}
+
+export interface Trip {
+  id: string
+  title: string
+  destination: string | null
+  start_date: string | null
+  end_date: string | null
+  travelers_count: number | null
+  status: TripStatus
+  created_at: string
+  updated_at: string
+  role?: string
+  preference?: TripPreference
+}
+
+export interface CreateTripPayload {
+  title?: string
+  destination?: string | null
+  start_date?: string | null
+  end_date?: string | null
+  travelers_count?: number
+  status?: TripStatus
+  budget?: number | null
+  transport_mode?: string | null
+  travel_style?: string | null
+  constraints?: TripConstraints
+  preferences?: string[]
+  natural_language?: string | null
+}

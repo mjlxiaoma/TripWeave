@@ -5,6 +5,7 @@ import { useAuth } from '../features/auth/AuthProvider'
 import LoginPage from '../features/auth/LoginPage'
 import RegisterPage from '../features/auth/RegisterPage'
 import HomePage from '../pages/HomePage'
+import TripsPage from '../pages/TripsPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
 
 function FullPageLoading() {
@@ -48,6 +49,22 @@ export const router = createBrowserRouter([
       { path: '/explore', element: <PlaceholderPage /> },
       {
         path: '/trips',
+        element: (
+          <RequireAuth>
+            <TripsPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/trip/new',
+        element: (
+          <RequireAuth>
+            <PlaceholderPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/trip/:tripId',
         element: (
           <RequireAuth>
             <PlaceholderPage />
