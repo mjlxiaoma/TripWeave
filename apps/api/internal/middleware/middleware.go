@@ -79,7 +79,7 @@ func Recover(log *slog.Logger) func(http.Handler) http.Handler {
 						"panic", rec,
 						"path", r.URL.Path,
 					)
-					phttp.Error(w, http.StatusInternalServerError, "internal_error", "internal server error")
+					phttp.Fail(w, http.StatusInternalServerError, "internal_error", "internal server error")
 				}
 			}()
 			next.ServeHTTP(w, r)
@@ -111,3 +111,4 @@ func CORS(origins []string) func(http.Handler) http.Handler {
 		})
 	}
 }
+

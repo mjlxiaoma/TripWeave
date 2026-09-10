@@ -13,8 +13,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/user"
 	"github.com/mjlxiaoma/TripWeave/apps/api/pkg/database"
 	phttp "github.com/mjlxiaoma/TripWeave/apps/api/pkg/http"
 	"github.com/mjlxiaoma/TripWeave/apps/api/pkg/logger"
@@ -51,6 +53,10 @@ func main() {
 	}
 	defer rdb.Close()
 
+	users := user.NewRepository(pool)
+	refreshStore := auth.NewRefreshStore(rdb, cfg.RefreshTTL)
+	authHandler := auth.NewHandler(users, refreshStore, cfg.JWTSecret, cfg.AccessTTL, cfg.RefreshTTL)
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recover(log))
@@ -64,14 +70,20 @@ func main() {
 		checkCtx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
 		defer cancel()
 		if err := pool.Ping(checkCtx); err != nil {
-			phttp.Error(w, http.StatusServiceUnavailable, "db_unavailable", "database check failed")
+			phttp.Fail(w, http.StatusServiceUnavailable, "DB_UNAVAILABLE", "database check failed")
 			return
 		}
 		if err := rdb.Ping(checkCtx).Err(); err != nil {
-			phttp.Error(w, http.StatusServiceUnavailable, "redis_unavailable", "redis check failed")
+			phttp.Fail(w, http.StatusServiceUnavailable, "REDIS_UNAVAILABLE", "redis check failed")
 			return
 		}
 		phttp.JSON(w, http.StatusOK, map[string]string{"status": "ready"})
+	})
+
+	r.Route("/api/v1", func(api chi.Router) {
+		api.Mount("/", authHandler.Routes())
+		api.With(auth.RequireAuth(cfg.JWTSecret)).Get("/me", authHandler.Me)
+		api.With(auth.RequireAuth(cfg.JWTSecret)).Post("/auth/logout", authHandler.Logout)
 	})
 
 	srv := &http.Server{
