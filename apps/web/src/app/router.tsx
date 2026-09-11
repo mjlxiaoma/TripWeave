@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader'
 import { useAuth } from '../features/auth/AuthProvider'
 import LoginPage from '../features/auth/LoginPage'
 import RegisterPage from '../features/auth/RegisterPage'
+import VerifyEmailPage from '../features/auth/VerifyEmailPage'
 import HomePage from '../pages/HomePage'
 import TripsPage from '../pages/TripsPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
@@ -85,6 +86,14 @@ export const router = createBrowserRouter([
         element: (
           <GuestOnly>
             <RegisterPage />
+          </GuestOnly>
+        ),
+      },
+      {
+        path: '/verify-email',
+        element: (
+          <GuestOnly>
+            <VerifyEmailPage />
           </GuestOnly>
         ),
       },

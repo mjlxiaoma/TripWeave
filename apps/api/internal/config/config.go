@@ -2,15 +2,24 @@
 package config
 
 import (
+	"errors"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
+// defaultJWTSecret is the dev-only fallback; production must override it.
+const defaultJWTSecret = "change-me-in-production"
+
+// ErrInsecureJWTSecret is returned when production runs with the dev JWT secret.
+var ErrInsecureJWTSecret = errors.New("JWT_SECRET must be set to a strong secret when APP_ENV=production")
+
 // Config holds all runtime configuration.
 type Config struct {
 	Addr          string
+	Env           string // "development" (default) or "production"
 	DatabaseURL   string
 	RedisAddr     string
 	RedisPassword string
@@ -22,7 +31,16 @@ type Config struct {
 	CORSOrigins   []string
 	MigrateDir    string
 	RunMigrate    bool
+	SMTPHost      string
+	SMTPPort      string
+	SMTPUser      string
+	SMTPPass      string
+	SMTPFrom      string
+	AppBaseURL    string
 }
+
+// IsProd reports whether the process runs in production mode.
+func (c *Config) IsProd() bool { return c.Env == "production" }
 
 func getenv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
@@ -32,31 +50,51 @@ func getenv(key, fallback string) string {
 }
 
 // Load reads configuration from environment variables with sensible dev defaults.
+// Malformed values log a warning and fall back instead of being silently ignored.
 func Load() *Config {
 	c := &Config{
 		Addr:          getenv("ADDR", ":8080"),
+		Env:           getenv("APP_ENV", "development"),
 		DatabaseURL:   getenv("DATABASE_URL", "postgres://tripweave:tripweave@127.0.0.1:5433/tripweave?sslmode=disable"),
 		RedisAddr:     getenv("REDIS_ADDR", "127.0.0.1:6380"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		JWTSecret:     getenv("JWT_SECRET", "change-me-in-production"),
+		JWTSecret:     getenv("JWT_SECRET", defaultJWTSecret),
 		AccessTTL:     parseDuration("ACCESS_TOKEN_TTL", 30*time.Minute),
 		RefreshTTL:    parseDuration("REFRESH_TOKEN_TTL", 30*24*time.Hour),
 		AIAPIKey:      os.Getenv("DEEPSEEK_API_KEY"),
 		MapAPIKey:     os.Getenv("AMAP_SERVICE_KEY"),
 		MigrateDir:    getenv("MIGRATE_DIR", "file://migrations"),
+		SMTPHost:      os.Getenv("SMTP_HOST"),
+		SMTPPort:      os.Getenv("SMTP_PORT"),
+		SMTPUser:      os.Getenv("SMTP_USER"),
+		SMTPPass:      os.Getenv("SMTP_PASS"),
+		SMTPFrom:      os.Getenv("SMTP_FROM"),
+		AppBaseURL:    getenv("APP_BASE_URL", "http://localhost:5173"),
 	}
 	if v := os.Getenv("CORS_ORIGINS"); v != "" {
 		c.CORSOrigins = splitComma(v)
 	} else {
 		c.CORSOrigins = []string{"http://localhost:5173"}
 	}
-	c.RunMigrate = true
+	// Auto-migrate on boot is a dev convenience; in production it must be an
+	// explicit opt-in (RUN_MIGRATE=true) so rolling deploys don't race.
+	c.RunMigrate = !c.IsProd()
 	if v := os.Getenv("RUN_MIGRATE"); v != "" {
 		if b, err := strconv.ParseBool(v); err == nil {
 			c.RunMigrate = b
+		} else {
+			slog.Warn("invalid RUN_MIGRATE value, using default", "value", v, "default", c.RunMigrate)
 		}
 	}
 	return c
+}
+
+// Validate enforces production invariants. Callers should fail fast on error.
+func (c *Config) Validate() error {
+	if c.IsProd() && c.JWTSecret == defaultJWTSecret {
+		return ErrInsecureJWTSecret
+	}
+	return nil
 }
 
 func parseDuration(key string, fallback time.Duration) time.Duration {
@@ -64,6 +102,7 @@ func parseDuration(key string, fallback time.Duration) time.Duration {
 		if d, err := time.ParseDuration(v); err == nil {
 			return d
 		}
+		slog.Warn("invalid duration env value, using default", "key", key, "value", v, "default", fallback)
 	}
 	return fallback
 }

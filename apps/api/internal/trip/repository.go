@@ -27,6 +27,9 @@ type Trip struct {
 	Status         string    `json:"status"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+
+	// Role is the querying member's role; populated only by ListByUser/Get.
+	Role string `json:"-"`
 }
 
 // Preference holds per-trip planning preferences (1:1 with trip).
@@ -132,9 +135,8 @@ func (r *Repository) ListByUser(ctx context.Context, userID string) ([]Trip, err
 	trips := []Trip{}
 	for rows.Next() {
 		var t Trip
-		var role string
 		if err := rows.Scan(&t.ID, &t.OwnerID, &t.Title, &t.Destination, &t.StartDate, &t.EndDate,
-			&t.TravelersCount, &t.Status, &t.CreatedAt, &t.UpdatedAt, &role); err != nil {
+			&t.TravelersCount, &t.Status, &t.CreatedAt, &t.UpdatedAt, &t.Role); err != nil {
 			return nil, err
 		}
 		trips = append(trips, t)

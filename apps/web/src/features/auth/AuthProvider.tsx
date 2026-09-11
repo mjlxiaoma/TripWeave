@@ -8,6 +8,7 @@ interface AuthContextValue {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, displayName: string) => Promise<void>
+  verifyEmail: (email: string, code: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -45,8 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(t.user)
   }
 
+  // 注册不直接登录：后端发送邮箱验证码，验证通过后才签发 token
   const register = async (email: string, password: string, displayName: string) => {
-    const t = await authApi.register(email, password, displayName)
+    await authApi.register(email, password, displayName)
+  }
+
+  const verifyEmail = async (email: string, code: string) => {
+    const t = await authApi.verifyEmail(email, code)
     setTokens(t)
     setUser(t.user)
   }
@@ -62,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verifyEmail, logout }}>
       {children}
     </AuthContext.Provider>
   )

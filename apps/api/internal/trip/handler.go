@@ -91,7 +91,9 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	out := make([]tripDTO, 0, len(trips))
 	for i := range trips {
-		out = append(out, toTripDTO(&trips[i]))
+		d := toTripDTO(&trips[i])
+		d.Role = trips[i].Role
+		out = append(out, d)
 	}
 	phttp.OK(w, http.StatusOK, out)
 }

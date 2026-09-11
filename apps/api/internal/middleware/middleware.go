@@ -49,6 +49,18 @@ func (sw *statusWriter) WriteHeader(code int) {
 	sw.ResponseWriter.WriteHeader(code)
 }
 
+// Flush forwards to the underlying writer so streaming responses (SSE for AI
+// generation) are not buffered by the logging middleware.
+func (sw *statusWriter) Flush() {
+	if f, ok := sw.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+// Unwrap lets http.ResponseController reach the underlying writer (hijack,
+// deadlines, etc.).
+func (sw *statusWriter) Unwrap() http.ResponseWriter { return sw.ResponseWriter }
+
 // Logging logs one line per request with duration and status.
 func Logging(log *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

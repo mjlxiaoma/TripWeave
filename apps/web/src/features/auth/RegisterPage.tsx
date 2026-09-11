@@ -20,8 +20,9 @@ export default function RegisterPage() {
     setError('')
     setSubmitting(true)
     try {
-      await register(email.trim(), password, displayName.trim())
-      navigate('/', { replace: true })
+      const trimmedEmail = email.trim()
+      await register(trimmedEmail, password, displayName.trim())
+      navigate('/verify-email', { state: { email: trimmedEmail } })
     } catch (err) {
       setError(authErrorMessage(err))
     } finally {

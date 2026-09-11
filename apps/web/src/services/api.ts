@@ -1,4 +1,4 @@
-import type { AuthTokens, CreateTripPayload, Envelope, Trip, User } from '../types'
+import type { AuthTokens, CreateTripPayload, Envelope, RegisterResult, Trip, User } from '../types'
 
 const BASE: string = import.meta.env.VITE_API_BASE ?? '/api/v1'
 
@@ -100,9 +100,19 @@ export async function api<T>(path: string, init?: RequestInit, retry = true): Pr
 
 export const authApi = {
   register: (email: string, password: string, displayName: string) =>
-    api<AuthTokens>('/auth/register', {
+    api<RegisterResult>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, display_name: displayName }),
+    }),
+  verifyEmail: (email: string, code: string) =>
+    api<AuthTokens>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
+  resendVerification: (email: string) =>
+    api<{ sent: boolean }>('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
     }),
   login: (email: string, password: string) =>
     api<AuthTokens>('/auth/login', {

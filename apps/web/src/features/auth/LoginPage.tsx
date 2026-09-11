@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthProvider'
 import { authErrorMessage } from './errorMessage'
+import { ApiError } from '../../services/api'
 import CompassIcon from '../../components/CompassIcon'
 
 export default function LoginPage() {
@@ -20,10 +21,16 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setSubmitting(true)
+    const trimmedEmail = email.trim()
     try {
-      await login(email.trim(), password)
+      await login(trimmedEmail, password)
       navigate('/', { replace: true })
     } catch (err) {
+      // 邮箱未验证：引导到验证码页面
+      if (err instanceof ApiError && err.code === 'EMAIL_NOT_VERIFIED') {
+        navigate('/verify-email', { state: { email: trimmedEmail } })
+        return
+      }
       setError(authErrorMessage(err))
     } finally {
       setSubmitting(false)

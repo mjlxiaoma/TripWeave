@@ -4,7 +4,10 @@
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "build:web": "pnpm --filter web build",
+    "lint:web": "pnpm --filter web lint",
     "dev:api": "cd apps/api && go run ./cmd/server",
-    "build:api": "cd apps/api && go build ./..."
+    "build:api": "cd apps/api && go build ./...",
+    "test:api": "cd apps/api && go test ./...",
+    "vet:api": "cd apps/api && go vet ./..."
   }
 }

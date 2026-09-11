@@ -34,6 +34,17 @@ func HashPassword(password string) (string, error) {
 	), nil
 }
 
+// dummyHash is a valid Argon2id encoding of a random password, used to run a
+// constant-work verify when the account does not exist so login timing cannot
+// reveal whether an email is registered.
+var dummyHash = func() string {
+	h, err := HashPassword("dummy-password-for-timing-safety")
+	if err != nil {
+		panic(err)
+	}
+	return h
+}()
+
 // VerifyPassword checks a plaintext password against an Argon2id hash.
 func VerifyPassword(password, encoded string) bool {
 	parts := strings.Split(encoded, "$")

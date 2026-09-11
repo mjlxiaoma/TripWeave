@@ -16,15 +16,19 @@ var ErrNotFound = errors.New("user not found")
 
 // User is the core user entity.
 type User struct {
-	ID           string    `json:"id"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"-"`
-	DisplayName  string    `json:"display_name"`
-	AvatarURL    *string   `json:"avatar_url"`
-	Status       string    `json:"status"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID              string     `json:"id"`
+	Email           string     `json:"email"`
+	PasswordHash    string     `json:"-"`
+	DisplayName     string     `json:"display_name"`
+	AvatarURL       *string    `json:"avatar_url"`
+	Status          string     `json:"status"`
+	EmailVerifiedAt *time.Time `json:"email_verified_at"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 }
+
+// Verified reports whether the user's email has been verified.
+func (u *User) Verified() bool { return u.EmailVerifiedAt != nil }
 
 // Repository provides user persistence.
 type Repository struct {
@@ -36,11 +40,11 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-const userCols = `id, email, password_hash, display_name, avatar_url, status, created_at, updated_at`
+const userCols = `id, email, password_hash, display_name, avatar_url, status, email_verified_at, created_at, updated_at`
 
 func scanUser(row pgx.Row) (*User, error) {
 	var u User
-	err := row.Scan(&u.ID, &u.Email, &u.PasswordHash, &u.DisplayName, &u.AvatarURL, &u.Status, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.Email, &u.PasswordHash, &u.DisplayName, &u.AvatarURL, &u.Status, &u.EmailVerifiedAt, &u.CreatedAt, &u.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -78,6 +82,30 @@ func (r *Repository) ByID(ctx context.Context, id string) (*User, error) {
 	u, err := scanUser(row)
 	if err != nil {
 		return nil, err
+	}
+	return u, nil
+}
+
+// MarkVerified sets email_verified_at to now for the user.
+func (r *Repository) MarkVerified(ctx context.Context, id string) (*User, error) {
+	row := r.pool.QueryRow(ctx,
+		`UPDATE users SET email_verified_at = now(), updated_at = now() WHERE id = $1 RETURNING `+userCols, id)
+	u, err := scanUser(row)
+	if err != nil {
+		return nil, fmt.Errorf("mark verified: %w", err)
+	}
+	return u, nil
+}
+
+// UpdateCredentials rewrites password hash and display name (used when an
+// unverified account registers again).
+func (r *Repository) UpdateCredentials(ctx context.Context, id, passwordHash, displayName string) (*User, error) {
+	row := r.pool.QueryRow(ctx,
+		`UPDATE users SET password_hash = $2, display_name = $3, updated_at = now() WHERE id = $1 RETURNING `+userCols,
+		id, passwordHash, displayName)
+	u, err := scanUser(row)
+	if err != nil {
+		return nil, fmt.Errorf("update credentials: %w", err)
 	}
 	return u, nil
 }

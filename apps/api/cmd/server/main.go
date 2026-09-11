@@ -17,6 +17,7 @@ import (
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/day"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/mail"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/trip"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/user"
@@ -34,6 +35,10 @@ func main() {
 	slog.SetDefault(log)
 
 	cfg := config.Load()
+	if err := cfg.Validate(); err != nil {
+		log.Error("invalid configuration", "error", err)
+		os.Exit(1)
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -61,7 +66,12 @@ func main() {
 
 	users := user.NewRepository(pool)
 	refreshStore := auth.NewRefreshStore(rdb, cfg.RefreshTTL)
-	authHandler := auth.NewHandler(users, refreshStore, cfg.JWTSecret, cfg.AccessTTL, cfg.RefreshTTL)
+	verifyStore := auth.NewVerificationStore(rdb)
+	mailer := mail.NewSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPass, cfg.SMTPFrom)
+	if mailer == nil {
+		log.Warn("SMTP not configured: verification codes will be logged instead of emailed")
+	}
+	authHandler := auth.NewHandler(users, refreshStore, verifyStore, mailer, cfg.JWTSecret, cfg.AccessTTL, cfg.RefreshTTL)
 
 	trips := trip.NewRepository(pool)
 	tripHandler := trip.NewHandler(trips)
@@ -94,7 +104,9 @@ func main() {
 	})
 
 	r.Route("/api/v1", func(api chi.Router) {
-		api.Mount("/", authHandler.Routes())
+		// 认证端点是撞库/爆破的主要目标：每 IP 5 次/分钟、突发 10 次
+		authLimited := middleware.RateLimit(5.0/60.0, 10)
+		api.With(authLimited).Mount("/", authHandler.Routes())
 		api.With(requireAuth).Get("/me", authHandler.Me)
 		api.With(requireAuth).Post("/auth/logout", authHandler.Logout)
 		authed := api.With(requireAuth)
@@ -137,3 +149,4 @@ func main() {
 	}
 	log.Info("server stopped")
 }
+

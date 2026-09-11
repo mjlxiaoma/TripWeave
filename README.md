@@ -15,12 +15,9 @@ AI 个性化旅行规划平台 —— 将碎片化的旅行需求，编织成真
 apps/
   web/        # React 前端
   api/        # Go 后端（cmd/server 入口，internal 业务分层，pkg 基础设施）
-packages/
-  types/      # 前后端共享 TypeScript 类型
-  config/     # 共享配置
-  eslint-config/
+packages/     # 共享包（当前为空，需要时再建）
 deploy/       # docker / nginx / 部署脚本
-migrations/   # 数据库迁移 SQL
+migrations/   # 数据库迁移 SQL（仓库根级，由 MIGRATE_DIR 指向）
 docs/         # 设计文档（仅本地，不上传）
 ```
 

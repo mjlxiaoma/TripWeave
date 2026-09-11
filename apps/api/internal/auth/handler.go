@@ -3,6 +3,8 @@ package auth
 
 import (
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -10,6 +12,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/mail"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/shared"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/user"
 	phttp "github.com/mjlxiaoma/TripWeave/apps/api/pkg/http"
 )
@@ -18,14 +22,17 @@ import (
 type Handler struct {
 	users      *user.Repository
 	refresh    *RefreshStore
+	verify     *VerificationStore
+	mailer     *mail.Sender
 	secret     string
 	accessTTL  time.Duration
 	refreshTTL time.Duration
 }
 
-// NewHandler creates the auth handler.
-func NewHandler(users *user.Repository, refresh *RefreshStore, secret string, accessTTL, refreshTTL time.Duration) *Handler {
-	return &Handler{users: users, refresh: refresh, secret: secret, accessTTL: accessTTL, refreshTTL: refreshTTL}
+// NewHandler creates the auth handler. mailer may be nil when SMTP is not
+// configured; in that case codes are logged instead of emailed (dev only).
+func NewHandler(users *user.Repository, refresh *RefreshStore, verify *VerificationStore, mailer *mail.Sender, secret string, accessTTL, refreshTTL time.Duration) *Handler {
+	return &Handler{users: users, refresh: refresh, verify: verify, mailer: mailer, secret: secret, accessTTL: accessTTL, refreshTTL: refreshTTL}
 }
 
 // Routes returns the auth router mounted at /auth plus /me.
@@ -34,6 +41,8 @@ func (h *Handler) Routes() chi.Router {
 	r.Post("/auth/register", h.register)
 	r.Post("/auth/login", h.login)
 	r.Post("/auth/refresh", h.refreshTokens)
+	r.Post("/auth/verify-email", h.verifyEmail)
+	r.Post("/auth/resend-verification", h.resendVerification)
 	return r
 }
 
@@ -52,12 +61,26 @@ type refreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+type verifyEmailRequest struct {
+	Email string `json:"email"`
+	Code  string `json:"code"`
+}
+
+type resendRequest struct {
+	Email string `json:"email"`
+}
+
 type tokenResponse struct {
 	AccessToken  string  `json:"access_token"`
 	RefreshToken string  `json:"refresh_token"`
 	TokenType    string  `json:"token_type"`
 	ExpiresIn    int64   `json:"expires_in"`
 	User         userDTO `json:"user"`
+}
+
+type registerResponse struct {
+	NeedsVerification bool   `json:"needs_verification"`
+	Email             string `json:"email"`
 }
 
 type userDTO struct {
@@ -77,7 +100,56 @@ func validateEmail(email string) bool {
 		return false
 	}
 	at := strings.Index(email, "@")
-	return at > 0 && at < len(email)-1 && strings.Contains(email[at:], ".")
+	if at <= 0 || at != strings.LastIndex(email, "@") {
+		return false
+	}
+	local, domain := email[:at], email[at+1:]
+	if local == "" || domain == "" {
+		return false
+	}
+	// 域名至少一个点，且点两侧非空；本地与域名均不含空白/控制字符
+	dot := strings.LastIndex(domain, ".")
+	if dot <= 0 || dot == len(domain)-1 {
+		return false
+	}
+	return !strings.ContainsAny(email, " \t\r\n\f\v")
+}
+
+// sendCode generates a code, stores it and emails it (or logs it when SMTP is
+// not configured). Returns false when the resend cooldown is still active.
+func (h *Handler) sendCode(r *http.Request, email string) (bool, error) {
+	ok, err := h.verify.CanResend(r.Context(), email)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+	code, err := NewCode()
+	if err != nil {
+		return false, err
+	}
+	if err := h.verify.Save(r.Context(), email, code); err != nil {
+		return false, err
+	}
+	if h.mailer == nil {
+		// SMTP 未配置：仅在开发环境把验证码打到日志，绝不返回给客户端
+		slog.Warn("SMTP not configured; verification code logged (dev only)", "email", email, "code", code)
+		return true, nil
+	}
+	subject := "TripWeave 邮箱验证码 / Email verification code"
+	text := fmt.Sprintf("你的 TripWeave 验证码是 %s，15 分钟内有效。\n\nYour TripWeave verification code is %s. It expires in 15 minutes.\n", code, code)
+	html := fmt.Sprintf(`<div style="font-family:system-ui,sans-serif;max-width:480px;margin:auto;padding:32px">
+  <h2 style="color:#0e7490;margin:0 0 8px">TripWeave 旅迹编织</h2>
+  <p style="color:#334155">你的邮箱验证码 / Your verification code:</p>
+  <p style="font-size:32px;letter-spacing:8px;font-weight:700;color:#0f172a;margin:16px 0">%s</p>
+  <p style="color:#64748b;font-size:13px">15 分钟内有效 · Expires in 15 minutes</p>
+  <p style="color:#94a3b8;font-size:12px;margin-top:24px">如果这不是你的操作，请忽略本邮件。/ If you did not request this, please ignore this email.</p>
+</div>`, code)
+	if err := h.mailer.Send(email, subject, text, html); err != nil {
+		return false, fmt.Errorf("send verification email: %w", err)
+	}
+	return true, nil
 }
 
 func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
@@ -106,17 +178,115 @@ func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
 		phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to hash password")
 		return
 	}
-	u, err := h.users.Create(r.Context(), req.Email, hash, req.DisplayName)
+	_, err = h.users.Create(r.Context(), req.Email, hash, req.DisplayName)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			phttp.Fail(w, http.StatusConflict, "EMAIL_TAKEN", "email already registered")
+			// 已注册但未验证：覆盖密码与昵称，重新发验证码
+			existing, loadErr := h.users.ByEmail(r.Context(), req.Email)
+			if loadErr != nil || existing.Verified() {
+				phttp.Fail(w, http.StatusConflict, "EMAIL_TAKEN", "email already registered")
+				return
+			}
+			if _, loadErr = h.users.UpdateCredentials(r.Context(), existing.ID, hash, req.DisplayName); loadErr != nil {
+				phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to update user")
+				return
+			}
+		} else {
+			phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to create user")
 			return
 		}
-		phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to create user")
+	}
+
+	sent, err := h.sendCode(r, req.Email)
+	if err != nil {
+		slog.Error("failed to send verification code", "email", req.Email, "error", err)
+		phttp.Fail(w, http.StatusBadGateway, "MAIL_SEND_FAILED", "failed to send verification email")
 		return
 	}
-	h.issueTokens(w, r, u, http.StatusCreated)
+	if !sent {
+		phttp.Fail(w, http.StatusTooManyRequests, "RESEND_TOO_SOON", "verification email already sent, please wait")
+		return
+	}
+	phttp.OK(w, http.StatusCreated, registerResponse{NeedsVerification: true, Email: req.Email})
+}
+
+func (h *Handler) verifyEmail(w http.ResponseWriter, r *http.Request) {
+	var req verifyEmailRequest
+	if err := decodeJSON(r, &req); err != nil {
+		phttp.Fail(w, http.StatusBadRequest, "INVALID_BODY", "invalid request body")
+		return
+	}
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	req.Code = strings.TrimSpace(req.Code)
+	if !validateEmail(req.Email) || len(req.Code) != 6 {
+		phttp.Fail(w, http.StatusBadRequest, "INVALID_BODY", "email and 6-digit code are required")
+		return
+	}
+	u, err := h.users.ByEmail(r.Context(), req.Email)
+	if err != nil {
+		if errors.Is(err, user.ErrNotFound) {
+			phttp.Fail(w, http.StatusNotFound, "USER_NOT_FOUND", "no account for this email")
+			return
+		}
+		phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to load user")
+		return
+	}
+	if u.Verified() {
+		phttp.Fail(w, http.StatusConflict, "ALREADY_VERIFIED", "email already verified, please log in")
+		return
+	}
+	if err := h.verify.Consume(r.Context(), req.Email, req.Code); err != nil {
+		if errors.Is(err, ErrBadCode) {
+			phttp.Fail(w, http.StatusBadRequest, "CODE_INVALID", "verification code is invalid or expired")
+			return
+		}
+		phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to verify code")
+		return
+	}
+	u, err = h.users.MarkVerified(r.Context(), u.ID)
+	if err != nil {
+		phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to mark verified")
+		return
+	}
+	h.issueTokens(w, r, u, http.StatusOK)
+}
+
+func (h *Handler) resendVerification(w http.ResponseWriter, r *http.Request) {
+	var req resendRequest
+	if err := decodeJSON(r, &req); err != nil {
+		phttp.Fail(w, http.StatusBadRequest, "INVALID_BODY", "invalid request body")
+		return
+	}
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	if !validateEmail(req.Email) {
+		phttp.Fail(w, http.StatusBadRequest, "INVALID_EMAIL", "invalid email format")
+		return
+	}
+	u, err := h.users.ByEmail(r.Context(), req.Email)
+	if err != nil {
+		if errors.Is(err, user.ErrNotFound) {
+			phttp.Fail(w, http.StatusNotFound, "USER_NOT_FOUND", "no account for this email")
+			return
+		}
+		phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", "failed to load user")
+		return
+	}
+	if u.Verified() {
+		phttp.Fail(w, http.StatusConflict, "ALREADY_VERIFIED", "email already verified, please log in")
+		return
+	}
+	sent, err := h.sendCode(r, req.Email)
+	if err != nil {
+		slog.Error("failed to resend verification code", "email", req.Email, "error", err)
+		phttp.Fail(w, http.StatusBadGateway, "MAIL_SEND_FAILED", "failed to send verification email")
+		return
+	}
+	if !sent {
+		phttp.Fail(w, http.StatusTooManyRequests, "RESEND_TOO_SOON", "please wait before requesting a new code")
+		return
+	}
+	phttp.OK(w, http.StatusOK, map[string]bool{"sent": true})
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
@@ -128,6 +298,8 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	u, err := h.users.ByEmail(r.Context(), strings.TrimSpace(req.Email))
 	if err != nil {
 		if errors.Is(err, user.ErrNotFound) {
+			// 对不存在的账号也执行一次 Argon2 校验，抹平响应时间差，防邮箱枚举
+			_ = VerifyPassword(req.Password, dummyHash)
 			phttp.Fail(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "email or password is incorrect")
 			return
 		}
@@ -140,6 +312,10 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	}
 	if !VerifyPassword(req.Password, u.PasswordHash) {
 		phttp.Fail(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "email or password is incorrect")
+		return
+	}
+	if !u.Verified() {
+		phttp.Fail(w, http.StatusForbidden, "EMAIL_NOT_VERIFIED", "email is not verified yet")
 		return
 	}
 	h.issueTokens(w, r, u, http.StatusOK)
@@ -212,11 +388,9 @@ func (h *Handler) issueTokens(w http.ResponseWriter, r *http.Request, u *user.Us
 	})
 }
 
+// decodeJSON reads a JSON request body (max 1 MiB, unknown fields rejected).
+// It is a thin alias of shared.Decode kept for call-site brevity.
 func decodeJSON(r *http.Request, v any) error {
-	if r.Body == nil {
-		return errors.New("empty body")
-	}
-	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20)
-	dec := jsonDecoder(r.Body)
-	return dec.Decode(v)
+	return shared.Decode(r, v)
 }
+

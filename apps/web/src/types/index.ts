@@ -6,6 +6,11 @@ export interface User {
   avatar_url: string | null
 }
 
+export interface RegisterResult {
+  needs_verification: boolean
+  email: string
+}
+
 export interface AuthTokens {
   access_token: string
   refresh_token: string
