@@ -41,8 +41,8 @@ func Load() *Config {
 		JWTSecret:     getenv("JWT_SECRET", "change-me-in-production"),
 		AccessTTL:     parseDuration("ACCESS_TOKEN_TTL", 30*time.Minute),
 		RefreshTTL:    parseDuration("REFRESH_TOKEN_TTL", 30*24*time.Hour),
-		AIAPIKey:      os.Getenv("AI_API_KEY"),
-		MapAPIKey:     os.Getenv("MAP_API_KEY"),
+		AIAPIKey:      os.Getenv("DEEPSEEK_API_KEY"),
+		MapAPIKey:     os.Getenv("AMAP_SERVICE_KEY"),
 		MigrateDir:    getenv("MIGRATE_DIR", "file://migrations"),
 	}
 	if v := os.Getenv("CORS_ORIGINS"); v != "" {

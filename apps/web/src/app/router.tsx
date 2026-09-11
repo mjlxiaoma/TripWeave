@@ -7,6 +7,7 @@ import RegisterPage from '../features/auth/RegisterPage'
 import HomePage from '../pages/HomePage'
 import TripsPage from '../pages/TripsPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
+import TripNewPage from '../pages/TripNewPage'
 
 function FullPageLoading() {
   return (
@@ -59,7 +60,7 @@ export const router = createBrowserRouter([
         path: '/trip/new',
         element: (
           <RequireAuth>
-            <PlaceholderPage />
+            <TripNewPage />
           </RequireAuth>
         ),
       },
