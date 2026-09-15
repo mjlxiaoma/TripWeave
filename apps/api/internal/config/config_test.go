@@ -59,6 +59,44 @@ func TestInvalidDurationFallsBack(t *testing.T) {
 	}
 }
 
+func TestAIDefaults(t *testing.T) {
+	cfg := Load()
+	if cfg.AIProvider != "deepseek" || cfg.AIBaseURL != "https://api.deepseek.com" || cfg.AIModel != "deepseek-chat" {
+		t.Errorf("AI defaults = %q/%q/%q", cfg.AIProvider, cfg.AIBaseURL, cfg.AIModel)
+	}
+	if cfg.AITimeout != 180*time.Second {
+		t.Errorf("AITimeout = %v, want 180s", cfg.AITimeout)
+	}
+	if cfg.AIMaxToolRounds != 5 {
+		t.Errorf("AIMaxToolRounds = %d, want 5", cfg.AIMaxToolRounds)
+	}
+}
+
+func TestAIOverrides(t *testing.T) {
+	t.Setenv("AI_PROVIDER", "openai")
+	t.Setenv("DEEPSEEK_BASE_URL", "https://api.example.com")
+	t.Setenv("DEEPSEEK_MODEL", "custom-model")
+	t.Setenv("AI_REQUEST_TIMEOUT", "60s")
+	t.Setenv("AI_MAX_TOOL_ROUNDS", "10")
+	cfg := Load()
+	if cfg.AIProvider != "openai" || cfg.AIBaseURL != "https://api.example.com" || cfg.AIModel != "custom-model" {
+		t.Errorf("AI overrides = %q/%q/%q", cfg.AIProvider, cfg.AIBaseURL, cfg.AIModel)
+	}
+	if cfg.AITimeout != time.Minute {
+		t.Errorf("AITimeout = %v, want 60s", cfg.AITimeout)
+	}
+	if cfg.AIMaxToolRounds != 10 {
+		t.Errorf("AIMaxToolRounds = %d, want 10", cfg.AIMaxToolRounds)
+	}
+}
+
+func TestInvalidIntFallsBack(t *testing.T) {
+	t.Setenv("AI_MAX_TOOL_ROUNDS", "not-a-number")
+	if got := Load().AIMaxToolRounds; got != 5 {
+		t.Errorf("AIMaxToolRounds = %d, want fallback 5", got)
+	}
+}
+
 func TestSplitComma(t *testing.T) {
 	got := splitComma(" https://a.com , ,https://b.com ,")
 	if len(got) != 2 || got[0] != "https://a.com" || got[1] != "https://b.com" {

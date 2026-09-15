@@ -18,25 +18,30 @@ var ErrInsecureJWTSecret = errors.New("JWT_SECRET must be set to a strong secret
 
 // Config holds all runtime configuration.
 type Config struct {
-	Addr          string
-	Env           string // "development" (default) or "production"
-	DatabaseURL   string
-	RedisAddr     string
-	RedisPassword string
-	JWTSecret     string
-	AccessTTL     time.Duration
-	RefreshTTL    time.Duration
-	AIAPIKey      string
-	MapAPIKey     string
-	CORSOrigins   []string
-	MigrateDir    string
-	RunMigrate    bool
-	SMTPHost      string
-	SMTPPort      string
-	SMTPUser      string
-	SMTPPass      string
-	SMTPFrom      string
-	AppBaseURL    string
+	Addr            string
+	Env             string // "development" (default) or "production"
+	DatabaseURL     string
+	RedisAddr       string
+	RedisPassword   string
+	JWTSecret       string
+	AccessTTL       time.Duration
+	RefreshTTL      time.Duration
+	AIAPIKey        string
+	AIProvider      string
+	AIBaseURL       string
+	AIModel         string
+	AITimeout       time.Duration
+	AIMaxToolRounds int
+	MapAPIKey       string
+	CORSOrigins     []string
+	MigrateDir      string
+	RunMigrate      bool
+	SMTPHost        string
+	SMTPPort        string
+	SMTPUser        string
+	SMTPPass        string
+	SMTPFrom        string
+	AppBaseURL      string
 }
 
 // IsProd reports whether the process runs in production mode.
@@ -53,28 +58,33 @@ func getenv(key, fallback string) string {
 // Malformed values log a warning and fall back instead of being silently ignored.
 func Load() *Config {
 	c := &Config{
-		Addr:          getenv("ADDR", ":8080"),
-		Env:           getenv("APP_ENV", "development"),
-		DatabaseURL:   getenv("DATABASE_URL", "postgres://tripweave:tripweave@127.0.0.1:5433/tripweave?sslmode=disable"),
-		RedisAddr:     getenv("REDIS_ADDR", "127.0.0.1:6380"),
-		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		JWTSecret:     getenv("JWT_SECRET", defaultJWTSecret),
-		AccessTTL:     parseDuration("ACCESS_TOKEN_TTL", 30*time.Minute),
-		RefreshTTL:    parseDuration("REFRESH_TOKEN_TTL", 30*24*time.Hour),
-		AIAPIKey:      os.Getenv("DEEPSEEK_API_KEY"),
-		MapAPIKey:     os.Getenv("AMAP_SERVICE_KEY"),
-		MigrateDir:    getenv("MIGRATE_DIR", "file://migrations"),
-		SMTPHost:      os.Getenv("SMTP_HOST"),
-		SMTPPort:      os.Getenv("SMTP_PORT"),
-		SMTPUser:      os.Getenv("SMTP_USER"),
-		SMTPPass:      os.Getenv("SMTP_PASS"),
-		SMTPFrom:      os.Getenv("SMTP_FROM"),
-		AppBaseURL:    getenv("APP_BASE_URL", "http://localhost:5173"),
+		Addr:            getenv("ADDR", ":8080"),
+		Env:             getenv("APP_ENV", "development"),
+		DatabaseURL:     getenv("DATABASE_URL", "postgres://tripweave:tripweave@127.0.0.1:5433/tripweave?sslmode=disable"),
+		RedisAddr:       getenv("REDIS_ADDR", "127.0.0.1:6380"),
+		RedisPassword:   os.Getenv("REDIS_PASSWORD"),
+		JWTSecret:       getenv("JWT_SECRET", defaultJWTSecret),
+		AccessTTL:       parseDuration("ACCESS_TOKEN_TTL", 30*time.Minute),
+		RefreshTTL:      parseDuration("REFRESH_TOKEN_TTL", 30*24*time.Hour),
+		AIAPIKey:        os.Getenv("DEEPSEEK_API_KEY"),
+		AIProvider:      getenv("AI_PROVIDER", "deepseek"),
+		AIBaseURL:       getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+		AIModel:         getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+		AITimeout:       parseDuration("AI_REQUEST_TIMEOUT", 180*time.Second),
+		AIMaxToolRounds: parseInt("AI_MAX_TOOL_ROUNDS", 5),
+		MapAPIKey:       os.Getenv("AMAP_SERVICE_KEY"),
+		MigrateDir:      getenv("MIGRATE_DIR", "file://migrations"),
+		SMTPHost:        os.Getenv("SMTP_HOST"),
+		SMTPPort:        os.Getenv("SMTP_PORT"),
+		SMTPUser:        os.Getenv("SMTP_USER"),
+		SMTPPass:        os.Getenv("SMTP_PASS"),
+		SMTPFrom:        os.Getenv("SMTP_FROM"),
+		AppBaseURL:      getenv("APP_BASE_URL", "http://localhost:5273"),
 	}
 	if v := os.Getenv("CORS_ORIGINS"); v != "" {
 		c.CORSOrigins = splitComma(v)
 	} else {
-		c.CORSOrigins = []string{"http://localhost:5173"}
+		c.CORSOrigins = []string{"http://localhost:5273"}
 	}
 	// Auto-migrate on boot is a dev convenience; in production it must be an
 	// explicit opt-in (RUN_MIGRATE=true) so rolling deploys don't race.
@@ -103,6 +113,16 @@ func parseDuration(key string, fallback time.Duration) time.Duration {
 			return d
 		}
 		slog.Warn("invalid duration env value, using default", "key", key, "value", v, "default", fallback)
+	}
+	return fallback
+}
+
+func parseInt(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+		slog.Warn("invalid int env value, using default", "key", key, "value", v, "default", fallback)
 	}
 	return fallback
 }
