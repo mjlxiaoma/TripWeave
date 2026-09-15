@@ -14,11 +14,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/ai"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/day"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/mail"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/planner"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/trip"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/user"
 	"github.com/mjlxiaoma/TripWeave/apps/api/pkg/database"
@@ -80,6 +82,23 @@ func main() {
 	dayHandler := day.NewHandler(days, trips)
 	requireAuth := auth.RequireAuth(cfg.JWTSecret)
 
+	// AI planner: provider is optional at boot (nil when no key configured) so
+	// the API still runs without LLM access; chat then returns a clear error.
+	var provider ai.Provider
+	if cfg.AIAPIKey != "" {
+		p, err := ai.NewDeepSeek(cfg.AIBaseURL, cfg.AIAPIKey, cfg.AIModel)
+		if err != nil {
+			log.Error("failed to init AI provider", "error", err)
+			os.Exit(1)
+		}
+		provider = p
+	} else {
+		log.Warn("DEEPSEEK_API_KEY not set: AI chat endpoints will be unavailable")
+	}
+	plannerRepo := planner.NewRepository(pool)
+	engine := planner.NewEngine(trips, days, plannerRepo, provider, planner.NewRedisLocker(rdb), cfg)
+	plannerHandler := planner.NewHandler(engine, plannerRepo, trips)
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recover(log))
@@ -123,6 +142,11 @@ func main() {
 		authed.Post("/days/{dayId}/activities/reorder", dayHandler.ReorderActivities)
 		authed.Patch("/activities/{id}", dayHandler.UpdateActivity)
 		authed.Delete("/activities/{id}", dayHandler.DeleteActivity)
+
+		// AI 端点按 IP 限流：LLM 调用成本高，约每 10s 一条消息
+		aiLimited := middleware.RateLimit(6.0/60.0, 3)
+		authed.With(aiLimited).Post("/trips/{id}/ai/chat", plannerHandler.Chat)
+		authed.Get("/trips/{id}/ai/messages", plannerHandler.Messages)
 	})
 
 	srv := &http.Server{
@@ -149,4 +173,3 @@ func main() {
 	}
 	log.Info("server stopped")
 }
-

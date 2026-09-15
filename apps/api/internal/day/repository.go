@@ -63,10 +63,12 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 // cannot reference a table alias).
 const dayCols = `id, trip_id, day_number, date::text, title, created_at, updated_at`
 
-const actColsBare = `id, trip_day_id, type, title, start_time::text, end_time::text,
+// to_char 输出 HH:MM —— time::text 会带秒（"09:00:00"）,下游（前端展示、
+// AI 快照、变更摘要）统一要 HH:MM。
+const actColsBare = `id, trip_day_id, type, title, to_char(start_time, 'HH24:MI'), to_char(end_time, 'HH24:MI'),
 	sort_order, notes, status, created_at, updated_at`
 
-const actColsA = `a.id, a.trip_day_id, a.type, a.title, a.start_time::text, a.end_time::text,
+const actColsA = `a.id, a.trip_day_id, a.type, a.title, to_char(a.start_time, 'HH24:MI'), to_char(a.end_time, 'HH24:MI'),
 	a.sort_order, a.notes, a.status, a.created_at, a.updated_at`
 
 func scanDay(row pgx.Row) (*Day, error) {
@@ -392,6 +394,74 @@ func (r *Repository) ReorderActivities(ctx context.Context, dayID string, ids []
 		return ErrReorderMismatch
 	}
 	return tx.Commit(ctx)
+}
+
+// ItineraryDayInput is one day of a bulk-created itinerary (AI cold start).
+type ItineraryDayInput struct {
+	Date       *string
+	Title      *string
+	Activities []ActivityInput
+}
+
+// CreateItinerary bulk-creates days and their activities in a single
+// transaction. day_number and sort_order are assigned by array position
+// (starting after any existing days), so the caller's ordering is the source
+// of truth. Any failure rolls the whole batch back — no half itineraries.
+func (r *Repository) CreateItinerary(ctx context.Context, tripID string, days []ItineraryDayInput) ([]Day, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	var base int
+	if err := tx.QueryRow(ctx,
+		`SELECT COALESCE(MAX(day_number), 0) FROM trip_days WHERE trip_id = $1`, tripID).Scan(&base); err != nil {
+		return nil, err
+	}
+
+	created := make([]Day, 0, len(days))
+	for i, in := range days {
+		dayNumber := base + i + 1
+		date := in.Date
+		if date == nil {
+			date, err = scheduledDate(ctx, tx, tripID, dayNumber)
+			if err != nil {
+				return nil, err
+			}
+		}
+		d, err := scanDay(tx.QueryRow(ctx, `
+			INSERT INTO trip_days (trip_id, day_number, date, title)
+			VALUES ($1, $2, $3::date, $4)
+			RETURNING `+dayCols, tripID, dayNumber, date, in.Title))
+		if err != nil {
+			return nil, err
+		}
+		for j, a := range in.Activities {
+			act, err := scanActivity(tx.QueryRow(ctx, `
+				INSERT INTO activities (trip_day_id, type, title, start_time, end_time, sort_order, notes, status)
+				VALUES ($1, $2, $3, $4::time, $5::time, $6, $7, $8)
+				RETURNING `+actColsBare,
+				d.ID, orDefault(a.Type, "other"), a.Title, a.StartTime, a.EndTime, j+1, a.Notes,
+				orDefault(a.Status, "planned")))
+			if err != nil {
+				return nil, err
+			}
+			d.Activities = append(d.Activities, *act)
+		}
+		created = append(created, *d)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return created, nil
+}
+
+// GetActivity loads one activity by id (used to capture before-values for
+// change summaries).
+func (r *Repository) GetActivity(ctx context.Context, activityID string) (*Activity, error) {
+	return scanActivity(r.pool.QueryRow(ctx,
+		`SELECT `+actColsBare+` FROM activities WHERE id = $1`, activityID))
 }
 
 func orDefault(s, fallback string) string {

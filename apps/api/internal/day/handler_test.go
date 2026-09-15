@@ -24,10 +24,10 @@ func TestValidateDay(t *testing.T) {
 
 func TestValidateActivity(t *testing.T) {
 	cases := []struct {
-		name    string
-		req     activityRequest
+		name     string
+		req      activityRequest
 		isCreate bool
-		wantErr bool
+		wantErr  bool
 	}{
 		{"create minimal", activityRequest{Title: sp("浅草寺")}, true, false},
 		{"create missing title", activityRequest{}, true, true},
