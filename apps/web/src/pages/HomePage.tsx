@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../features/auth/AuthProvider'
+import { tripsApi } from '../services/api'
 import { DRAFT_NL_KEY } from '../utils/draftNl'
 
 type SpeechAlt = { transcript: string }
@@ -59,6 +60,14 @@ export default function HomePage() {
   const [nl, setNl] = useState('')
   const [activeChip, setActiveChip] = useState<ChipKey>('popular')
   const [listening, setListening] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+
+  // 登录/注册回来自动恢复上次输入的草稿。
+  useEffect(() => {
+    const draft = sessionStorage.getItem(DRAFT_NL_KEY)
+    if (draft) setNl(draft)
+  }, [])
 
   const speechSupported = useMemo(() => {
     if (typeof window === 'undefined') return false
@@ -89,10 +98,30 @@ export default function HomePage() {
     rec.start()
   }
 
-  const startPlanning = () => {
+  const startPlanning = async () => {
     const text = nl.trim()
-    if (text) sessionStorage.setItem(DRAFT_NL_KEY, text)
-    navigate(user ? '/trip/new' : '/register')
+    if (!text || creating) return
+    // 未登录:存草稿,注册/登录后回来恢复。
+    if (!user) {
+      sessionStorage.setItem(DRAFT_NL_KEY, text)
+      navigate('/register')
+      return
+    }
+    // 已登录:创建最小骨架 trip,进规划器由 AI 接管生成。
+    setCreating(true)
+    setCreateError(null)
+    try {
+      const trip = await tripsApi.create({
+        title: text.slice(0, 24) || t('home.untitledTrip'),
+        status: 'planning',
+        natural_language: text,
+      })
+      sessionStorage.removeItem(DRAFT_NL_KEY)
+      navigate(`/trip/${trip.id}?autostart=1`, { replace: true })
+    } catch {
+      setCreateError(t('home.createFailed'))
+      setCreating(false)
+    }
   }
 
   return (
@@ -133,12 +162,16 @@ export default function HomePage() {
 
         <button
           type="button"
-          onClick={startPlanning}
-          className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-primary-700"
+          onClick={() => void startPlanning()}
+          disabled={creating}
+          className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:opacity-50"
         >
-          {t('home.startPlanning')}
-          <ArrowRightIcon />
+          {creating ? t('home.creating') : t('home.startPlanning')}
+          {!creating && <ArrowRightIcon />}
         </button>
+        {createError && (
+          <p className="mt-3 rounded-xl bg-rose-50 px-4 py-2 text-sm text-rose-700">{createError}</p>
+        )}
 
         <div className="mt-20">
           <p className="text-sm font-medium text-slate-500">{t('home.popularTitle')}</p>

@@ -25,7 +25,7 @@ docs/         # 设计文档（仅本地，不上传）
 
 ```bash
 pnpm install          # 安装前端依赖
-pnpm dev:web          # 启动前端 http://localhost:5173
+pnpm dev:web          # 启动前端 http://localhost:5273
 pnpm dev:api          # 启动后端 http://localhost:8080（需本机 Go 环境）
 
 docker compose up -d  # 启动 PostgreSQL + Redis（可选，本步暂未使用）

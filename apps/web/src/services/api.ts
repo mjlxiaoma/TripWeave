@@ -1,4 +1,4 @@
-import type { AuthTokens, CreateTripPayload, Envelope, RegisterResult, Trip, User } from '../types'
+import type { AuthTokens, CreateTripPayload, Day, Envelope, RegisterResult, Trip, User } from '../types'
 
 const BASE: string = import.meta.env.VITE_API_BASE ?? '/api/v1'
 
@@ -62,6 +62,10 @@ async function rawRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
 // 单飞刷新：并发 401 只触发一次 refresh
 let refreshing: Promise<boolean> | null = null
+// refreshSession 导出给 SSE 流式请求复用（流式请求不走 api<T> 的 JSON 解包）。
+export function refreshSession(): Promise<boolean> {
+  return tryRefresh()
+}
 function tryRefresh(): Promise<boolean> {
   const rt = getRefreshToken()
   if (!rt) return Promise.resolve(false)
@@ -132,4 +136,5 @@ export const tripsApi = {
   get: (id: string) => api<Trip>('/trips/' + id),
   create: (payload: CreateTripPayload) =>
     api<Trip>('/trips', { method: 'POST', body: JSON.stringify(payload) }),
+  getDays: (id: string) => api<Day[]>('/trips/' + id + '/days'),
 }

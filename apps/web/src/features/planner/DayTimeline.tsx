@@ -1,0 +1,150 @@
+import { useTranslation } from 'react-i18next'
+import type { Activity, ActivityType, Day } from '../../types'
+
+const TYPE_COLOR: Record<ActivityType, string> = {
+  attraction: 'text-primary-600 bg-primary-50',
+  restaurant: 'text-amber-600 bg-amber-50',
+  cafe: 'text-orange-500 bg-orange-50',
+  hotel: 'text-violet-600 bg-violet-50',
+  transport: 'text-slate-600 bg-slate-100',
+  free_time: 'text-emerald-600 bg-emerald-50',
+  other: 'text-slate-500 bg-slate-50',
+}
+
+function TypeIcon({ type }: { type: ActivityType }) {
+  const cls = 'h-4 w-4'
+  switch (type) {
+    case 'attraction':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={cls}>
+          <path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z" />
+          <circle cx="12" cy="10" r="2.5" />
+        </svg>
+      )
+    case 'restaurant':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={cls}>
+          <path d="M5 3v7a2 2 0 002 2h0a2 2 0 002-2V3M7 12v9M17 3v18M17 3a3 3 0 013 3v4h-3" strokeLinecap="round" />
+        </svg>
+      )
+    case 'cafe':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={cls}>
+          <path d="M4 8h12v5a4 4 0 01-4 4H8a4 4 0 01-4-4V8zM16 9h2a2 2 0 010 4h-2M7 4v2M11 4v2" strokeLinecap="round" />
+        </svg>
+      )
+    case 'hotel':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={cls}>
+          <path d="M3 21V7l9-4 9 4v14M3 21h18M9 21v-6h6v6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    case 'transport':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={cls}>
+          <path d="M5 17h14M5 17a2 2 0 11-4 0M19 17a2 2 0 104 0M5 17l2-8h8l2 8M7 9V5h10v4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )
+    case 'free_time':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={cls}>
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 8v4l3 2" strokeLinecap="round" />
+        </svg>
+      )
+    default:
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={cls}>
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="5" cy="12" r="2" />
+          <circle cx="19" cy="12" r="2" />
+        </svg>
+      )
+  }
+}
+
+// DB 的 time 类型会带秒（"09:00:00"）,展示截到 HH:MM。
+function shortTime(t?: string | null): string {
+  return t ? t.slice(0, 5) : ''
+}
+
+function timeLabel(a: Activity): string {
+  const s = shortTime(a.start_time)
+  const e = shortTime(a.end_time)
+  if (s && e) return `${s} – ${e}`
+  return s
+}
+
+function ActivityCard({ activity }: { activity: Activity }) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${TYPE_COLOR[activity.type]}`}>
+        <TypeIcon type={activity.type} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-slate-900">{activity.title}</p>
+        <p className="text-xs text-slate-500">
+          {timeLabel(activity)}
+          {activity.notes ? ` · ${activity.notes}` : ''}
+        </p>
+      </div>
+      <span className="shrink-0 text-[10px] uppercase tracking-wide text-slate-400">
+        {t(`planner.activityType.${activity.type}`)}
+      </span>
+    </div>
+  )
+}
+
+interface Props {
+  days: Day[]
+  generating: boolean
+}
+
+export default function DayTimeline({ days, generating }: Props) {
+  const { t } = useTranslation()
+
+  if (days.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
+        {generating ? (
+          <>
+            <span className="mb-3 inline-block h-7 w-7 animate-spin rounded-full border-2 border-ai-600 border-t-transparent" />
+            <p className="text-sm font-medium text-slate-700">{t('planner.generating')}</p>
+            <p className="mt-1 text-xs text-slate-400">{t('planner.generatingHint')}</p>
+          </>
+        ) : (
+          <p className="text-sm text-slate-400">{t('planner.empty')}</p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      {days.map((day, idx) => (
+        <section key={day.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
+              {idx + 1}
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                {t('planner.dayLabel', { n: idx + 1 })}
+                {day.title ? ` · ${day.title}` : ''}
+              </p>
+              {day.date && <p className="text-xs text-slate-500">{day.date}</p>}
+            </div>
+          </div>
+          <div className="space-y-2 p-3">
+            {day.activities.length === 0 ? (
+              <p className="px-2 py-3 text-center text-xs text-slate-400">{t('planner.noActivities')}</p>
+            ) : (
+              day.activities.map((a) => <ActivityCard key={a.id} activity={a} />)
+            )}
+          </div>
+        </section>
+      ))}
+    </div>
+  )
+}

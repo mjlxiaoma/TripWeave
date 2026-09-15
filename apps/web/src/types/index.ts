@@ -79,3 +79,41 @@ export interface CreateTripPayload {
   preferences?: string[]
   natural_language?: string | null
 }
+
+// --- planner (days / activities) ---
+
+export type ActivityType =
+  | 'attraction'
+  | 'restaurant'
+  | 'cafe'
+  | 'hotel'
+  | 'transport'
+  | 'free_time'
+  | 'other'
+
+export type ActivityStatus = 'planned' | 'done' | 'skipped'
+
+export interface Activity {
+  id: string
+  day_id: string
+  type: ActivityType
+  title: string
+  start_time: string | null
+  end_time: string | null
+  sort_order: number
+  notes: string | null
+  status: ActivityStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface Day {
+  id: string
+  trip_id: string
+  day_number: number
+  date: string | null
+  title: string | null
+  created_at: string
+  updated_at: string
+  activities: Activity[]
+}
