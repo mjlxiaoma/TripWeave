@@ -155,10 +155,14 @@ export default function PlannerPage() {
         {/* 左:时间轴(占 2/3) */}
         <div className="lg:col-span-2">
           <DayTimeline
+            tripId={tripId}
             days={days}
             generating={generating}
+            destination={trip.destination}
             selectedActivityId={selectedActivityId}
             onSelectActivity={selectActivity}
+            onDaysChange={setDays}
+            onRefetch={refreshDays}
           />
         </div>
 
