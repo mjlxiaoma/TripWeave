@@ -60,7 +60,7 @@ func (e *Engine) toolCreateItinerary() Tool {
 			for _, d := range created {
 				flat = append(flat, d.Activities...)
 			}
-			e.locateActivities(flat, cityOf(ec))
+			e.locateActivities(flat, cityOf(ec), nil)
 
 			changes := []ChangeItem{}
 			for _, d := range created {
@@ -156,7 +156,7 @@ func (e *Engine) toolCreateActivity() Tool {
 			if err != nil {
 				return toolError("创建失败: " + err.Error())
 			}
-			e.locateActivities([]day.Activity{*a}, cityOf(ec))
+			e.locateActivities([]day.Activity{*a}, cityOf(ec), anchorsFromDays(ec.Days))
 			res := toolOK(fmt.Sprintf("已在 Day %d 添加「%s」", in.DayNumber, a.Title), a)
 			res.Changes = []ChangeItem{{DayNumber: in.DayNumber, Kind: "created", Title: a.Title}}
 			return res

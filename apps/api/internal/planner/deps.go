@@ -35,8 +35,11 @@ type DayStore interface {
 
 // Locator resolves an activity title to a map location (nil-safe: the engine
 // treats a nil Locator or a nil result as "not located" and keeps going).
+// anchors are the trip's already-located points: candidates too far from all
+// of them are rejected as provider mismatches.
 type Locator interface {
-	Locate(ctx context.Context, title, city string) (*location.Location, error)
+	Locate(ctx context.Context, title, city string, anchors []location.Point) (*location.Location, error)
+	Anchor(ctx context.Context, city string) (*location.Point, error)
 }
 
 // Store is the planner's own persistence (conversations/messages/tool calls).

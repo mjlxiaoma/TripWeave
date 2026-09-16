@@ -11,6 +11,10 @@ import TripHeader from './TripHeader'
 import { plannerApi } from './api'
 import type { Day, Trip } from '../../types'
 
+// 后端自动定位的活动类型（与 planner/locate.go 的 locatableTypes 一致）；
+// transport/free_time/other 不定位，轮询对它们无意义。
+const LOCATABLE_TYPES = new Set(['attraction', 'restaurant', 'cafe', 'hotel'])
+
 export default function PlannerPage() {
   const { t } = useTranslation()
   const { tripId = '' } = useParams<{ tripId: string }>()
@@ -39,17 +43,53 @@ export default function PlannerPage() {
       ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [])
 
+  // 后端自动定位是后台串行任务(节流+重试,数秒),AI 回合结束时的那次 refresh
+  // 拿到的常是「尚未定位」的快照。这里做有限轮询补齐坐标,避免地图停在
+  // 「坐标点不足」。发送新消息时重置计数。
+  const locatePollsRef = useRef(0)
+  const locateTimerRef = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(locateTimerRef.current), [])
+
   const refreshDays = useCallback(async () => {
     if (!tripId) return
     try {
       const d = await plannerApi.fetchDays(tripId)
       setDays(d)
+      pollLocate(d)
     } catch {
       /* 静默:时间轴刷新失败不打断对话 */
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId])
 
+  // pollLocate: 若还有白名单类型活动未定位,3s 后再拉一次(最多 3 次)。
+  function pollLocate(d: Day[]) {
+    const pending = d.some((day) =>
+      day.activities.some((a) => !a.location && LOCATABLE_TYPES.has(a.type)),
+    )
+    if (!pending || locatePollsRef.current >= 3) return
+    locatePollsRef.current += 1
+    locateTimerRef.current = window.setTimeout(() => {
+      plannerApi
+        .fetchDays(tripId)
+        .then((fresh) => {
+          setDays(fresh)
+          pollLocate(fresh)
+        })
+        .catch(() => {})
+    }, 3000)
+  }
+
   const { state, send, stop } = usePlannerChat(tripId, refreshDays)
+
+  // 发送消息时重置轮询计数(新一轮 AI 可能又产生待定位活动)
+  const sendMessage = useCallback(
+    (msg: string) => {
+      locatePollsRef.current = 0
+      send(msg)
+    },
+    [send],
+  )
 
   // 初始加载 trip + days。
   useEffect(() => {
@@ -179,7 +219,7 @@ export default function PlannerPage() {
           {state.error && (
             <p className="mx-4 mb-2 rounded-xl bg-rose-50 px-4 py-2 text-xs text-rose-700">{state.error}</p>
           )}
-          <AiComposer streaming={state.streaming} onSend={send} onStop={stop} />
+          <AiComposer streaming={state.streaming} onSend={sendMessage} onStop={stop} />
         </div>
       </div>
     </div>

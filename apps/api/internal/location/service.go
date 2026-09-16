@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log/slog"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -78,35 +79,98 @@ func (s *Service) Search(ctx context.Context, q, city string) ([]Location, error
 
 // Locate returns the best single match for an activity title, or nil when the
 // provider knows nothing about it — a miss is not an error (map fallback).
-// When city is set, results implausibly far from it (see maxCityKm) are dropped:
-// a generic title like "长城脚下农家菜" otherwise resolves to a same-named POI on
-// the other side of the country and destroys the day's fit/route.
-func (s *Service) Locate(ctx context.Context, title, city string) (*Location, error) {
+//
+// Generic titles like "卧龙镇午餐（川味家常菜）" match same-keyword POIs all
+// over the country (Beijing, Lijiang, ...). Two guards against that:
+//  1. preferCity promotes same-city results when a destination city is known;
+//  2. anchors (already-located points of the trip, plus the destination
+//     centroid) reject candidates that sit implausibly far from the itinerary.
+// A candidate with no acceptable anchor is skipped rather than bound wrong.
+func (s *Service) Locate(ctx context.Context, title, city string, anchors []Point) (*Location, error) {
 	res, err := s.Search(ctx, title, city)
 	if err != nil {
 		return nil, err
 	}
-	res = filterByCity(res, city)
+	res = preferCity(res, city)
 	if len(res) == 0 {
 		return nil, nil
 	}
-	return &res[0], nil
+	if len(anchors) == 0 {
+		return &res[0], nil
+	}
+	for i := range res {
+		if nearAnyAnchor(res[i], anchors) {
+			return &res[i], nil
+		}
+	}
+	return nil, nil
 }
 
-// filterByCity drops results whose provider city disagrees with the trip
-// destination. Results with an empty city (sparse geocode rows) are kept.
-func filterByCity(res []Location, city string) []Location {
+// Point is a WGS-free lat/lng pair (GCJ-02 here, consistent end to end).
+type Point struct {
+	Latitude  float64
+	Longitude float64
+}
+
+// maxAnchorKm bounds a located point to the itinerary's geography. Generous
+// enough for a day's drive leg (成都→丹巴 ≈ 310km), tight enough to reject
+// cross-country mismatches (阿坝→北京新发地 ≈ 1500km, →丽江 ≈ 700km).
+const maxAnchorKm = 400
+
+func nearAnyAnchor(l Location, anchors []Point) bool {
+	for _, a := range anchors {
+		if haversineKm(l.Latitude, l.Longitude, a.Latitude, a.Longitude) <= maxAnchorKm {
+			return true
+		}
+	}
+	return false
+}
+
+// haversineKm is the great-circle distance in kilometers.
+func haversineKm(lat1, lng1, lat2, lng2 float64) float64 {
+	const earthRadiusKm = 6371.0
+	toRad := func(d float64) float64 { return d * math.Pi / 180 }
+	dLat := toRad(lat2 - lat1)
+	dLng := toRad(lng2 - lng1)
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Cos(toRad(lat1))*math.Cos(toRad(lat2))*math.Sin(dLng/2)*math.Sin(dLng/2)
+	return 2 * earthRadiusKm * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+}
+
+// Anchor geocodes a destination string ("成都") to its centroid; nil when the
+// provider can't resolve it (unknown regions like "川西" simply yield no anchor).
+func (s *Service) Anchor(ctx context.Context, city string) (*Point, error) {
+	if s == nil || s.amap == nil || city == "" {
+		return nil, nil
+	}
+	geos, err := s.amap.Geocode(ctx, city, "")
+	if err != nil {
+		return nil, err
+	}
+	if len(geos) == 0 {
+		return nil, nil
+	}
+	return &Point{Latitude: geos[0].Latitude, Longitude: geos[0].Longitude}, nil
+}
+
+// preferCity moves same-city results to the front, preserving order otherwise.
+// With no same-city match the list is returned unchanged (soft preference).
+func preferCity(res []Location, city string) []Location {
 	if city == "" {
 		return res
 	}
-	out := make([]Location, 0, len(res))
+	var local, rest []Location
 	for _, l := range res {
-		if l.City != nil && *l.City != "" && !cityMatches(*l.City, city) {
-			continue
+		if l.City != nil && *l.City != "" && cityMatches(*l.City, city) {
+			local = append(local, l)
+		} else {
+			rest = append(rest, l)
 		}
-		out = append(out, l)
 	}
-	return out
+	if len(local) == 0 {
+		return res
+	}
+	return append(local, rest...)
 }
 
 // cityMatches compares provider city names ("北京市") with the trip destination

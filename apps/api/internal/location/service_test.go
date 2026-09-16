@@ -131,7 +131,7 @@ func TestSearchEmptyIsNotAnError(t *testing.T) {
 
 func TestLocateMissReturnsNilNotError(t *testing.T) {
 	svc := NewService(&fakeProvider{}, &fakeStore{})
-	loc, err := svc.Locate(context.Background(), "x", "")
+	loc, err := svc.Locate(context.Background(), "x", "", nil)
 	if err != nil || loc != nil {
 		t.Errorf("miss should be (nil, nil), got %v %v", loc, err)
 	}
@@ -229,20 +229,22 @@ func TestCityMatches(t *testing.T) {
 	}
 }
 
-func TestFilterByCityDropsFarMatches(t *testing.T) {
-	keep := Location{Name: "近"}
-	far := Location{Name: "远"}
+func TestPreferCityPromotesSameCity(t *testing.T) {
 	cityBeijing := "北京市"
 	citySanya := "三亚市"
-	keep.City = &cityBeijing
-	far.City = &citySanya
-	out := filterByCity([]Location{keep, far}, "北京")
-	if len(out) != 1 || out[0].Name != "近" {
-		t.Errorf("want only the in-city result, got %+v", out)
+	far := Location{Name: "三亚店", City: &citySanya}
+	near := Location{Name: "北京店", City: &cityBeijing}
+	out := preferCity([]Location{far, near}, "北京")
+	if len(out) != 2 {
+		t.Fatalf("soft preference must keep all results, got %d", len(out))
 	}
-	// 无目的地时不过滤
-	if n := len(filterByCity([]Location{keep, far}, "")); n != 2 {
-		t.Errorf("empty city should keep all, got %d", n)
+	if out[0].Name != "北京店" {
+		t.Errorf("same-city result should come first, got %+v", out)
+	}
+	// 无目的地时原样返回
+	out = preferCity([]Location{far, near}, "")
+	if out[0].Name != "三亚店" {
+		t.Errorf("empty city keeps provider order, got %+v", out)
 	}
 }
 
@@ -253,7 +255,7 @@ func TestLocateDropsCrossCityMismatch(t *testing.T) {
 		{ProviderPlaceID: "SY", Name: "长城脚下农家菜", City: "三亚市", Longitude: 109.6, Latitude: 18.6},
 		{ProviderPlaceID: "BJ", Name: "长城脚下农家菜(延庆)", City: "北京市", Longitude: 116.0, Latitude: 40.3},
 	}}, &fakeStore{})
-	loc, err := svc.Locate(context.Background(), "长城脚下农家菜", "北京")
+	loc, err := svc.Locate(context.Background(), "长城脚下农家菜", "北京", nil)
 	if err != nil {
 		t.Fatalf("Locate: %v", err)
 	}
@@ -262,16 +264,74 @@ func TestLocateDropsCrossCityMismatch(t *testing.T) {
 	}
 }
 
-func TestLocateAllCrossCityReturnsNil(t *testing.T) {
-	// 全部命中外城且目的地明确：宁可不定位（前端灰色兜底），也不绑定错城。
+func TestLocateAnchorRejectsFarCandidates(t *testing.T) {
+	// 泛化标题「卧龙镇午餐」：provider 先回北京新发地、再回阿坝本地 — 有锚点时
+	// 应跳过远在北京的候选、选中阿坝的；锚点正是用来防「同关键词全国错绑」。
 	svc := NewService(&fakeProvider{pois: []POI{
-		{ProviderPlaceID: "SY", Name: "X", City: "三亚市", Longitude: 109.6, Latitude: 18.6},
+		{ProviderPlaceID: "BJ", Name: "川味家常菜(新发地店)", City: "北京市", Longitude: 116.3, Latitude: 39.8},
+		{ProviderPlaceID: "AB", Name: "卧龙镇川味家常菜", City: "阿坝藏族羌族自治州", Longitude: 103.3, Latitude: 31.1},
 	}}, &fakeStore{})
-	loc, err := svc.Locate(context.Background(), "X", "北京")
+	anchor := []Point{{Latitude: 31.1, Longitude: 103.3}} // 卧龙大熊猫基地
+	loc, err := svc.Locate(context.Background(), "卧龙镇午餐（川味家常菜）", "", anchor)
+	if err != nil {
+		t.Fatalf("Locate: %v", err)
+	}
+	if loc == nil || loc.ID != "loc-AB" {
+		t.Errorf("anchor should skip the Beijing mismatch, got %+v", loc)
+	}
+}
+
+func TestLocateAnchorAllFarReturnsNil(t *testing.T) {
+	// 全部候选都远离锚点：宁可不定位，也不绑错城市。
+	svc := NewService(&fakeProvider{pois: []POI{
+		{ProviderPlaceID: "BJ", Name: "X", City: "北京市", Longitude: 116.3, Latitude: 39.8},
+	}}, &fakeStore{})
+	anchor := []Point{{Latitude: 31.1, Longitude: 103.3}}
+	loc, err := svc.Locate(context.Background(), "X", "", anchor)
 	if err != nil {
 		t.Fatalf("Locate: %v", err)
 	}
 	if loc != nil {
-		t.Errorf("want nil (unlocated), got %+v", loc)
+		t.Errorf("all-far candidates must be rejected, got %+v", loc)
+	}
+}
+
+func TestLocateNoAnchorKeepsFirst(t *testing.T) {
+	// 无锚点（destination 解析不出、行程还没有任何定位点）时信任 provider 排序。
+	svc := NewService(&fakeProvider{pois: []POI{
+		{ProviderPlaceID: "P1", Name: "X", City: "北京市", Longitude: 116.3, Latitude: 39.8},
+	}}, &fakeStore{})
+	loc, err := svc.Locate(context.Background(), "X", "", nil)
+	if err != nil {
+		t.Fatalf("Locate: %v", err)
+	}
+	if loc == nil || loc.ID != "loc-P1" {
+		t.Errorf("no anchors should keep the first result, got %+v", loc)
+	}
+}
+
+func TestHaversineKm(t *testing.T) {
+	// 北京(116.4,39.9) → 成都(104.1,30.7) 约 1520km
+	d := haversineKm(39.9, 116.4, 30.7, 104.1)
+	if d < 1400 || d > 1700 {
+		t.Errorf("unexpected distance %.0f km", d)
+	}
+	if d0 := haversineKm(31.1, 103.3, 31.1, 103.3); d0 > 0.1 {
+		t.Errorf("same point should be ~0, got %.4f", d0)
+	}
+}
+
+func TestLocateCrossCityOnlyFallsBackToProviderOrder(t *testing.T) {
+	// 跨市州行程（destination=成都，景点在阿坝）：无同城结果时不过滤，
+	// 信任 provider 相关性排序返回第一个——硬过滤会把环线行程全部误杀。
+	svc := NewService(&fakeProvider{pois: []POI{
+		{ProviderPlaceID: "AB", Name: "卧龙大熊猫基地", City: "阿坝藏族羌族自治州", Longitude: 103.2, Latitude: 31.0},
+	}}, &fakeStore{})
+	loc, err := svc.Locate(context.Background(), "卧龙大熊猫基地", "成都", nil)
+	if err != nil {
+		t.Fatalf("Locate: %v", err)
+	}
+	if loc == nil || loc.ID != "loc-AB" {
+		t.Errorf("cross-prefecture match must be kept, got %+v", loc)
 	}
 }

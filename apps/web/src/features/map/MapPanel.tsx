@@ -17,6 +17,10 @@ interface PlacedPoint {
 // 避免时间轴每次刷新都重新烧搜索配额。
 type FallbackCache = Map<string, Location | null>
 
+// 兜底搜索只对「地点型」活动做：transport 的标题是「成都出发经都汶高速前往卧龙」
+// 这类行程描述，搜 POI 得到的是噪声；与后端自动定位白名单保持一致。
+const SEARCHABLE_TYPES = new Set(['attraction', 'restaurant', 'cafe', 'hotel'])
+
 interface Props {
   destination: string | null
   days: Day[]
@@ -129,7 +133,7 @@ export default function MapPanel({
       } else if (cache.has(a.id)) {
         const loc = cache.get(a.id)
         if (loc) direct.push({ activity: a, lng: loc.longitude, lat: loc.latitude, precise: false })
-      } else {
+      } else if (SEARCHABLE_TYPES.has(a.type)) {
         pending.push(a)
       }
     }
