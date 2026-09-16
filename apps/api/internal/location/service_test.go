@@ -28,6 +28,10 @@ func (f *fakeProvider) Direction(context.Context, string, string, string) (*Dire
 	return f.direction, f.dirErr
 }
 
+func (f *fakeProvider) Weather(context.Context, string) ([]WeatherCast, error) {
+	return nil, nil
+}
+
 type fakeStore struct {
 	upserts []string // provider place ids, in call order
 	loc     *Location

@@ -45,6 +45,7 @@ func (e *Engine) toolCreateItinerary() Tool {
 				for _, a := range d.Activities {
 					acts = append(acts, day.ActivityInput{
 						Type: a.Type, Title: a.Title, StartTime: a.StartTime, EndTime: a.EndTime, Notes: a.Notes,
+						LocationID: a.LocationID,
 					})
 				}
 				input = append(input, day.ItineraryDayInput{Date: d.Date, Title: d.Title, Activities: acts})
@@ -128,12 +129,13 @@ func (e *Engine) toolCreateActivity() Tool {
 				return writeDenied()
 			}
 			var in struct {
-				DayNumber int     `json:"day_number"`
-				Type      string  `json:"type"`
-				Title     string  `json:"title"`
-				StartTime *string `json:"start_time"`
-				EndTime   *string `json:"end_time"`
-				Notes     *string `json:"notes"`
+				DayNumber  int     `json:"day_number"`
+				Type       string  `json:"type"`
+				Title      string  `json:"title"`
+				StartTime  *string `json:"start_time"`
+				EndTime    *string `json:"end_time"`
+				Notes      *string `json:"notes"`
+				LocationID *string `json:"location_id"`
 			}
 			if err := json.Unmarshal(args, &in); err != nil {
 				return toolError("参数格式错误: " + err.Error())
@@ -146,12 +148,12 @@ func (e *Engine) toolCreateActivity() Tool {
 				return toolError(fmt.Sprintf("该天活动数已达上限 %d", maxActsPerDay))
 			}
 			if errs := validateActivity(ActivityCreateArg{
-				Type: in.Type, Title: in.Title, StartTime: in.StartTime, EndTime: in.EndTime, Notes: in.Notes,
+				Type: in.Type, Title: in.Title, StartTime: in.StartTime, EndTime: in.EndTime, Notes: in.Notes, LocationID: in.LocationID,
 			}, in.DayNumber-1, len(target.Activities)); len(errs) > 0 {
 				return toolError(strings.Join(errs, "\n"))
 			}
 			a, err := e.days.CreateActivity(ctx, target.ID, day.ActivityInput{
-				Type: in.Type, Title: in.Title, StartTime: in.StartTime, EndTime: in.EndTime, Notes: in.Notes,
+				Type: in.Type, Title: in.Title, StartTime: in.StartTime, EndTime: in.EndTime, Notes: in.Notes, LocationID: in.LocationID,
 			})
 			if err != nil {
 				return toolError("创建失败: " + err.Error())

@@ -11,7 +11,7 @@ import (
 
 // PromptVersion is stamped onto every generation task so prompt regressions
 // can be correlated with output quality over time.
-const PromptVersion = "p10.1"
+const PromptVersion = "p11.0"
 
 // systemPrompt is the stable prefix sent on every request (kept byte-stable so
 // DeepSeek's context cache can dedupe it across calls).
@@ -22,6 +22,8 @@ const systemPrompt = `你是 TripWeave 的旅行规划助手，帮助用户设�
 - 当行程为空且用户给出旅行意向时，优先用 create_itinerary 一次性生成完整的多日方案。
 - 当行程已有内容、用户提出调整时，用细粒度工具（create_day / create_activity / update_activity / delete_activity / reorder_activities / update_trip_info）做精准修改，不要整体重建。
 - 修改前先用 get_trip_context 了解当前行程，避免破坏用户已有的安排。
+- 用户问目的地天气、或需要按天气调整户外/室内安排时，用 get_weather 查预报。
+- 用户点名要去某个具体景点/餐厅/酒店时，可用 search_locations 查到真实地点，再在创建活动时带上 location_id 绑定到地图；不搜也可以，系统会自动按名称兜底定位。
 
 ## 行程设计原则
 - 每天的活动按时间顺序排列，符合真实旅行节奏（上午景点、中午用餐、下午游览、傍晚休闲）。

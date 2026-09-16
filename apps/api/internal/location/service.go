@@ -34,6 +34,7 @@ type Provider interface {
 	SearchPOI(ctx context.Context, keywords, city string) ([]POI, error)
 	Geocode(ctx context.Context, address, city string) ([]POI, error)
 	Direction(ctx context.Context, mode, origin, destination string) (*Direction, error)
+	Weather(ctx context.Context, city string) ([]WeatherCast, error)
 }
 
 // Service orchestrates provider lookups, persistence and route aggregation.
@@ -151,6 +152,14 @@ func (s *Service) Anchor(ctx context.Context, city string) (*Point, error) {
 		return nil, nil
 	}
 	return &Point{Latitude: geos[0].Latitude, Longitude: geos[0].Longitude}, nil
+}
+
+// Weather returns the multi-day forecast for a city (delegates to provider).
+func (s *Service) Weather(ctx context.Context, city string) ([]WeatherCast, error) {
+	if s == nil || s.amap == nil {
+		return nil, ErrNoProvider
+	}
+	return s.amap.Weather(ctx, city)
 }
 
 // preferCity moves same-city results to the front, preserving order otherwise.

@@ -54,6 +54,8 @@ func toolOK(label string, data any) *ToolResult {
 func (e *Engine) registry() []Tool {
 	return []Tool{
 		e.toolGetTripContext(),
+		e.toolGetWeather(),
+		e.toolSearchLocations(),
 		e.toolCreateItinerary(),
 		e.toolCreateDay(),
 		e.toolCreateActivity(),
@@ -89,6 +91,24 @@ var schemaGetTripContext = json.RawMessage(`{
   "type": "object", "properties": {}, "additionalProperties": false
 }`)
 
+var schemaGetWeather = json.RawMessage(`{
+  "type": "object",
+  "properties": {
+    "city": {"type": "string", "description": "城市名或 adcode；缺省时用旅行目的地"}
+  },
+  "additionalProperties": false
+}`)
+
+var schemaSearchLocations = json.RawMessage(`{
+  "type": "object",
+  "properties": {
+    "query": {"type": "string", "description": "地点名称，如「故宫博物院」「卧龙中华大熊猫苑」"},
+    "city":  {"type": "string", "description": "限定城市，可选；缺省时用旅行目的地"}
+  },
+  "required": ["query"],
+  "additionalProperties": false
+}`)
+
 var activitySchema = `{
   "type": "object",
   "properties": {
@@ -96,7 +116,8 @@ var activitySchema = `{
     "title":      {"type": "string", "description": "具体名称，如「清水寺」，不要用占位符"},
     "start_time": {"type": "string", "description": "HH:MM，可选"},
     "end_time":   {"type": "string", "description": "HH:MM，可选"},
-    "notes":      {"type": "string", "description": "备注，可选"}
+    "notes":      {"type": "string", "description": "备注，可选"},
+    "location_id":{"type": "string", "description": "可选：search_locations 返回的地点 id，用于绑定精确地点"}
   },
   "required": ["type", "title"],
   "additionalProperties": false
@@ -141,7 +162,8 @@ var schemaCreateActivity = json.RawMessage(`{
     "title":      {"type": "string"},
     "start_time": {"type": "string", "description": "HH:MM，可选"},
     "end_time":   {"type": "string", "description": "HH:MM，可选"},
-    "notes":      {"type": "string", "description": "可选"}
+    "notes":      {"type": "string", "description": "可选"},
+    "location_id":{"type": "string", "description": "可选：search_locations 返回的地点 id，绑定精确地点"}
   },
   "required": ["day_number", "type", "title"],
   "additionalProperties": false

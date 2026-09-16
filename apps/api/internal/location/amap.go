@@ -182,6 +182,45 @@ func (c *AmapClient) Geocode(ctx context.Context, address, city string) ([]POI, 
 	return out, nil
 }
 
+// WeatherCast is one day of the weather forecast (extensions=all).
+type WeatherCast struct {
+	Date         string `json:"date"`
+	Week         string `json:"week"`
+	DayWeather   string `json:"dayweather"`
+	NightWeather string `json:"nightweather"`
+	DayTemp      string `json:"daytemp"`
+	NightTemp    string `json:"nighttemp"`
+}
+
+// Weather returns the multi-day forecast for a city (adcode or city name).
+func (c *AmapClient) Weather(ctx context.Context, city string) ([]WeatherCast, error) {
+	if c == nil || c.key == "" {
+		return nil, ErrNoProvider
+	}
+	q := url.Values{}
+	q.Set("key", c.key)
+	q.Set("city", city)
+	q.Set("extensions", "all")
+	var resp struct {
+		Status    flexString `json:"status"`
+		Info      flexString `json:"info"`
+		Forecasts []struct {
+			City  flexString    `json:"city"`
+			Casts []WeatherCast `json:"casts"`
+		} `json:"forecasts"`
+	}
+	if err := c.get(ctx, "/v3/weather/weatherInfo", q, &resp); err != nil {
+		return nil, err
+	}
+	if resp.Status != "1" {
+		return nil, fmt.Errorf("%w: weather: %s", ErrProvider, resp.Info)
+	}
+	if len(resp.Forecasts) == 0 {
+		return nil, nil
+	}
+	return resp.Forecasts[0].Casts, nil
+}
+
 // Direction routes origin → destination ("lng,lat" each). mode is "driving" or
 // "walking"; both endpoints share the v5 response shape.
 func (c *AmapClient) Direction(ctx context.Context, mode, origin, destination string) (*Direction, error) {

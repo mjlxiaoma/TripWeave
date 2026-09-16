@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/shared"
 )
 
 // Activity type / status allow-lists, mirroring the DB CHECK constraints.
@@ -68,12 +70,14 @@ type ItineraryDayArg struct {
 }
 
 // ActivityCreateArg is one activity inside create_itinerary / create_activity.
+// LocationID optionally binds a real place returned by search_locations.
 type ActivityCreateArg struct {
-	Type      string  `json:"type"`
-	Title     string  `json:"title"`
-	StartTime *string `json:"start_time"`
-	EndTime   *string `json:"end_time"`
-	Notes     *string `json:"notes"`
+	Type       string  `json:"type"`
+	Title      string  `json:"title"`
+	StartTime  *string `json:"start_time"`
+	EndTime    *string `json:"end_time"`
+	Notes      *string `json:"notes"`
+	LocationID *string `json:"location_id"`
 }
 
 // ItineraryArgs is the full create_itinerary payload.
@@ -104,6 +108,9 @@ func validateActivity(a ActivityCreateArg, dayIdx, actIdx int) []string {
 	}
 	if a.Notes != nil && len([]rune(*a.Notes)) > maxNotesLen {
 		errs = append(errs, where+"的 notes 过长")
+	}
+	if a.LocationID != nil && !shared.IsUUID(*a.LocationID) {
+		errs = append(errs, where+"的 location_id 非法")
 	}
 	return errs
 }
