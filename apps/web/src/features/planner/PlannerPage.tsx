@@ -5,6 +5,7 @@ import { usePlannerChat } from '../ai/usePlannerChat'
 import AiComposer from '../ai/AiComposer'
 import AiMessageList from '../ai/AiMessageList'
 import SummaryCard from '../ai/SummaryCard'
+import MapPanel from '../map/MapPanel'
 import DayTimeline from './DayTimeline'
 import TripHeader from './TripHeader'
 import { plannerApi } from './api'
@@ -20,6 +21,23 @@ export default function PlannerPage() {
   const [days, setDays] = useState<Day[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  // 地图 ↔ 时间轴双向联动的选中态（null = 未选中，地图默认展示第一天）
+  const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
+
+  // 时间轴卡片点击 → 地图定位（再次点击取消选中）
+  const selectActivity = useCallback((activityId: string) => {
+    setSelectedActivityId((prev) => (prev === activityId ? null : activityId))
+  }, [])
+
+  // 地图 marker 点击 → 高亮时间轴卡片并滚入视野
+  const handleMapSelectActivity = useCallback((activityId: string) => {
+    setSelectedActivityId(activityId)
+    document
+      .getElementById(`activity-${activityId}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [])
 
   const refreshDays = useCallback(async () => {
     if (!tripId) return
@@ -96,11 +114,26 @@ export default function PlannerPage() {
       <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-3">
         {/* 左:时间轴(占 2/3) */}
         <div className="lg:col-span-2">
-          <DayTimeline days={days} generating={generating} />
+          <DayTimeline
+            days={days}
+            generating={generating}
+            selectedActivityId={selectedActivityId}
+            onSelectActivity={selectActivity}
+          />
         </div>
 
-        {/* 右:AI 摘要 + 上下文 */}
+        {/* 右:地图 + AI 摘要 + 上下文 */}
         <aside className="space-y-4 lg:col-span-1">
+          <div className="lg:sticky lg:top-4">
+            <MapPanel
+              destination={trip.destination}
+              days={days}
+              selectedDayId={selectedDayId}
+              onSelectDay={setSelectedDayId}
+              selectedActivityId={selectedActivityId}
+              onSelectActivity={handleMapSelectActivity}
+            />
+          </div>
           <SummaryCard lines={state.summaryLines} changes={state.summary} />
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('planner.contextTitle')}</h3>

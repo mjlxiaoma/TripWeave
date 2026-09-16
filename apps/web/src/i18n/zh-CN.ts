@@ -203,4 +203,19 @@ export default {
     emptyHint: '和 AI 聊聊，让它帮你生成或调整行程',
     summaryTitle: 'AI 变更摘要',
   },
+  map: {
+    title: '行程地图',
+    noKey: '未配置地图 Key（VITE_AMAP_KEY），地图暂不可用',
+    loadError: '地图加载失败，请检查网络后重试',
+    approximate: '大致位置（未精确定位）',
+    hasApproximate: '部分地点为大致位置',
+    routeLoading: '路线计算中…',
+    tooFewPoints: '坐标点不足，暂无路线',
+    noRoute: '暂无路线',
+    summary: '全程约 {{distance}} · {{duration}} 分钟 · {{mode}}',
+    mode: {
+      driving: '驾车',
+      walking: '步行',
+    },
+  },
 }

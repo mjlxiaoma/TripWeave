@@ -203,4 +203,19 @@ export default {
     emptyHint: 'Chat with AI to generate or refine your itinerary',
     summaryTitle: 'AI change summary',
   },
+  map: {
+    title: 'Itinerary map',
+    noKey: 'Map key not configured (VITE_AMAP_KEY); map unavailable',
+    loadError: 'Failed to load the map. Check your network and retry.',
+    approximate: 'Approximate location',
+    hasApproximate: 'Some spots are approximate',
+    routeLoading: 'Routing…',
+    tooFewPoints: 'Not enough located points for a route',
+    noRoute: 'No route available',
+    summary: 'About {{distance}} · {{duration}} min · {{mode}}',
+    mode: {
+      driving: 'Driving',
+      walking: 'Walking',
+    },
+  },
 }

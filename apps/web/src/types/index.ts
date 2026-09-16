@@ -93,6 +93,39 @@ export type ActivityType =
 
 export type ActivityStatus = 'planned' | 'done' | 'skipped'
 
+// --- map / locations ---
+
+export interface LocationRef {
+  id: string
+  name: string
+  latitude: number
+  longitude: number
+  address: string | null
+}
+
+export interface Location extends LocationRef {
+  city: string | null
+}
+
+export interface RouteLeg {
+  from_activity_id: string
+  to_activity_id: string
+  distance_m: number
+  duration_s: number
+  polyline: string
+}
+
+export type RouteMode = 'driving' | 'walking'
+
+export interface DayRoute {
+  day_id: string
+  mode: string
+  activity_ids: string[]
+  legs: RouteLeg[]
+  total_distance_m: number
+  total_duration_s: number
+}
+
 export interface Activity {
   id: string
   day_id: string
@@ -103,6 +136,8 @@ export interface Activity {
   sort_order: number
   notes: string | null
   status: ActivityStatus
+  location_id: string | null
+  location: LocationRef | null
   created_at: string
   updated_at: string
 }

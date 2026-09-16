@@ -75,10 +75,23 @@ function timeLabel(a: Activity): string {
   return s
 }
 
-function ActivityCard({ activity }: { activity: Activity }) {
+function ActivityCard({
+  activity,
+  selected,
+  onSelect,
+}: {
+  activity: Activity
+  selected: boolean
+  onSelect?: (activityId: string) => void
+}) {
   const { t } = useTranslation()
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+    <div
+      onClick={() => onSelect?.(activity.id)}
+      className={`flex items-center gap-3 rounded-xl border bg-white p-3 shadow-sm transition-colors ${
+        selected ? 'border-primary-500 ring-2 ring-primary-100' : 'border-slate-200'
+      } ${onSelect ? 'cursor-pointer hover:border-primary-300' : ''}`}
+    >
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${TYPE_COLOR[activity.type]}`}>
         <TypeIcon type={activity.type} />
       </span>
@@ -86,6 +99,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
         <p className="truncate text-sm font-medium text-slate-900">{activity.title}</p>
         <p className="text-xs text-slate-500">
           {timeLabel(activity)}
+          {activity.location ? ` · ${activity.location.name}` : ''}
           {activity.notes ? ` · ${activity.notes}` : ''}
         </p>
       </div>
@@ -99,9 +113,11 @@ function ActivityCard({ activity }: { activity: Activity }) {
 interface Props {
   days: Day[]
   generating: boolean
+  selectedActivityId?: string | null
+  onSelectActivity?: (activityId: string) => void
 }
 
-export default function DayTimeline({ days, generating }: Props) {
+export default function DayTimeline({ days, generating, selectedActivityId, onSelectActivity }: Props) {
   const { t } = useTranslation()
 
   if (days.length === 0) {
@@ -140,7 +156,15 @@ export default function DayTimeline({ days, generating }: Props) {
             {day.activities.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-slate-400">{t('planner.noActivities')}</p>
             ) : (
-              day.activities.map((a) => <ActivityCard key={a.id} activity={a} />)
+              day.activities.map((a) => (
+                <div key={a.id} id={`activity-${a.id}`}>
+                  <ActivityCard
+                    activity={a}
+                    selected={a.id === selectedActivityId}
+                    onSelect={onSelectActivity}
+                  />
+                </div>
+              ))
             )}
           </div>
         </section>
