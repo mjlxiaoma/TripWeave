@@ -282,4 +282,15 @@ export default {
     notFound: '链接不存在或已撤销',
     notFoundHint: '这个分享链接可能已被主人撤销，或地址有误。',
   },
+  explore: {
+    title: '探索旅行灵感',
+    subtitle: '热门目的地随心选，行程模板一键生成',
+    destinations: '热门目的地',
+    templates: '行程模板',
+    templatesHint: '选一个模板，AI 帮你生成完整行程',
+    days: '{{count}} 天',
+    useTemplate: '一键生成行程',
+    generating: '生成中…',
+    createFailed: '创建失败，请稍后重试',
+  },
 }

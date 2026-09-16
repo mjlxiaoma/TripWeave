@@ -282,4 +282,15 @@ export default {
     notFound: 'Link not found or revoked',
     notFoundHint: 'This share link may have been revoked by its owner, or the address is wrong.',
   },
+  explore: {
+    title: 'Explore travel inspiration',
+    subtitle: 'Pick a destination, or let AI generate a full itinerary from a template',
+    destinations: 'Popular destinations',
+    templates: 'Itinerary templates',
+    templatesHint: 'Pick a template and AI generates the full itinerary',
+    days: '{{count}} days',
+    useTemplate: 'Generate itinerary',
+    generating: 'Generating…',
+    createFailed: 'Failed to create. Please retry.',
+  },
 }

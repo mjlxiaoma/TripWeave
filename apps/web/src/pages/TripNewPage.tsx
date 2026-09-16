@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiError, tripsApi } from '../services/api'
 import type { CreateTripPayload } from '../types'
@@ -93,6 +93,7 @@ const inputCls =
 export default function TripNewPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<DraftState>(initialDraft)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -106,6 +107,13 @@ export default function TripNewPage() {
       setDraft((d) => ({ ...d, extra: nl }))
       sessionStorage.removeItem(DRAFT_NL_KEY)
     }
+  }, [])
+
+  // 从探索页目的地卡带过来的 ?destination= 预填
+  useEffect(() => {
+    const dest = searchParams.get('destination')
+    if (dest) setDraft((d) => ({ ...d, destination: dest }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const set = <K extends keyof DraftState>(key: K, value: DraftState[K]) => {

@@ -7,11 +7,11 @@ import RegisterPage from '../features/auth/RegisterPage'
 import VerifyEmailPage from '../features/auth/VerifyEmailPage'
 import HomePage from '../pages/HomePage'
 import TripsPage from '../pages/TripsPage'
-import PlaceholderPage from '../pages/PlaceholderPage'
 import TripNewPage from '../pages/TripNewPage'
 import PlannerPage from '../features/planner/PlannerPage'
 import TodayPage from '../features/today/TodayPage'
 import SharePage from '../features/share/SharePage'
+import ExplorePage from '../features/explore/ExplorePage'
 
 function FullPageLoading() {
   return (
@@ -51,7 +51,7 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: '/', element: <HomePage /> },
-      { path: '/explore', element: <PlaceholderPage /> },
+      { path: '/explore', element: <ExplorePage /> },
       {
         path: '/trips',
         element: (
