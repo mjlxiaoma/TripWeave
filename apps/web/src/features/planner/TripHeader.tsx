@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import ShareDialog from '../share/ShareDialog'
 import type { Trip, TripStatus } from '../../types'
 
 function BackIcon() {
@@ -37,6 +39,7 @@ function isTraveling(trip: Trip): boolean {
 
 export default function TripHeader({ trip, onBack }: Props) {
   const { t } = useTranslation()
+  const [shareOpen, setShareOpen] = useState(false)
   const traveling = isTraveling(trip)
   return (
     <header className="sticky top-16 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -65,10 +68,18 @@ export default function TripHeader({ trip, onBack }: Props) {
         >
           {traveling ? `● ${t('today.enterTraveling')}` : t('today.enter')}
         </Link>
+        <button
+          type="button"
+          onClick={() => setShareOpen(true)}
+          className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-200"
+        >
+          {t('share.open')}
+        </button>
         <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_BADGE[trip.status]}`}>
           {t(`trips.status.${trip.status}`)}
         </span>
       </div>
+      {shareOpen && <ShareDialog tripId={trip.id} onClose={() => setShareOpen(false)} />}
     </header>
   )
 }

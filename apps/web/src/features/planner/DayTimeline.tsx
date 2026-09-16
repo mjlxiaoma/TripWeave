@@ -110,13 +110,15 @@ interface CardProps {
   activity: Activity
   selected: boolean
   onSelect?: (id: string) => void
-  onEdit: () => void
-  onDelete: () => void
+  onEdit?: () => void
+  onDelete?: () => void
   /** dnd-kit 把手属性（attributes + listeners），仅把手可拖避免与点击编辑冲突 */
   handleProps?: Record<string, unknown>
+  /** 只读模式（分享页）：隐藏把手与编辑/删除按钮 */
+  readonly?: boolean
 }
 
-function ActivityCard({ activity, selected, onSelect, onEdit, onDelete, handleProps }: CardProps) {
+function ActivityCard({ activity, selected, onSelect, onEdit, onDelete, handleProps, readonly }: CardProps) {
   const { t } = useTranslation()
   return (
     <div
@@ -126,14 +128,16 @@ function ActivityCard({ activity, selected, onSelect, onEdit, onDelete, handlePr
       }`}
     >
       {/* 拖拽把手：仅把手可拖，避免与点击编辑冲突 */}
-      <button
-        type="button"
-        {...handleProps}
-        aria-label={t('planner.drag')}
-        className="cursor-grab touch-none text-slate-300 opacity-0 transition-opacity hover:text-slate-500 focus:opacity-100 group-hover:opacity-100 active:cursor-grabbing"
-      >
-        <GripIcon />
-      </button>
+      {!readonly && (
+        <button
+          type="button"
+          {...handleProps}
+          aria-label={t('planner.drag')}
+          className="cursor-grab touch-none text-slate-300 opacity-0 transition-opacity hover:text-slate-500 focus:opacity-100 group-hover:opacity-100 active:cursor-grabbing"
+        >
+          <GripIcon />
+        </button>
+      )}
 
       <div
         className="min-w-0 flex-1 cursor-pointer"
@@ -157,29 +161,31 @@ function ActivityCard({ activity, selected, onSelect, onEdit, onDelete, handlePr
         </div>
       </div>
 
-      {/* 操作按钮：hover 显示 */}
-      <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-        <button
-          type="button"
-          onClick={onEdit}
-          title={t('planner.edit')}
-          className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-primary-600"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-            <path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          title={t('planner.delete')}
-          className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      {/* 操作按钮：hover 显示（只读模式不渲染） */}
+      {!readonly && onEdit && onDelete && (
+        <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={onEdit}
+            title={t('planner.edit')}
+            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-primary-600"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+              <path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            title={t('planner.delete')}
+            className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -207,6 +213,8 @@ interface Props {
   onSelectActivity?: (activityId: string) => void
   onDaysChange: (days: Day[]) => void
   onRefetch: () => void
+  /** 只读模式（公开分享页）：无拖拽、无编辑/删除/新增 */
+  readonly?: boolean
 }
 
 export default function DayTimeline({
@@ -218,6 +226,7 @@ export default function DayTimeline({
   onSelectActivity,
   onDaysChange,
   onRefetch,
+  readonly,
 }: Props) {
   const { t } = useTranslation()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -286,6 +295,45 @@ export default function DayTimeline({
         ) : (
           <p className="text-sm text-slate-400">{t('planner.empty')}</p>
         )}
+      </div>
+    )
+  }
+
+  // 只读分支（分享页）：无拖拽、无编辑/删除/添加按钮，Day 头部无删除。
+  if (readonly) {
+    return (
+      <div className="space-y-5">
+        {days.map((day, idx) => (
+          <section key={day.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
+                {idx + 1}
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  {t('planner.dayLabel', { n: idx + 1 })}
+                  {day.title ? ` · ${day.title}` : ''}
+                </p>
+                {day.date && <p className="text-xs text-slate-500">{day.date}</p>}
+              </div>
+            </div>
+            <div className="space-y-2 p-3">
+              {day.activities.length === 0 ? (
+                <p className="px-2 py-3 text-center text-xs text-slate-400">{t('planner.noActivities')}</p>
+              ) : (
+                day.activities.map((a) => (
+                  <ActivityCard
+                    key={a.id}
+                    activity={a}
+                    selected={a.id === selectedActivityId}
+                    onSelect={onSelectActivity}
+                    readonly
+                  />
+                ))
+              )}
+            </div>
+          </section>
+        ))}
       </div>
     )
   }

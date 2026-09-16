@@ -11,6 +11,7 @@ import PlaceholderPage from '../pages/PlaceholderPage'
 import TripNewPage from '../pages/TripNewPage'
 import PlannerPage from '../features/planner/PlannerPage'
 import TodayPage from '../features/today/TodayPage'
+import SharePage from '../features/share/SharePage'
 
 function FullPageLoading() {
   return (
@@ -83,6 +84,8 @@ export const router = createBrowserRouter([
           </RequireAuth>
         ),
       },
+      // 公开分享视图：无需登录
+      { path: '/share/:token', element: <SharePage /> },
       {
         path: '/login',
         element: (

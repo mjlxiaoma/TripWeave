@@ -28,6 +28,8 @@ interface Props {
   onSelectDay: (dayId: string) => void
   selectedActivityId: string | null
   onSelectActivity: (activityId: string) => void
+  /** 公开分享模式：fallback 搜索与路线都走无需登录的分享端点 */
+  publicToken?: string
 }
 
 function fmtDistance(m: number): string {
@@ -72,6 +74,7 @@ export default function MapPanel({
   onSelectDay,
   selectedActivityId,
   onSelectActivity,
+  publicToken,
 }: Props) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -168,7 +171,8 @@ export default function MapPanel({
     for (const a of day.activities) {
       if (a.location || !SEARCHABLE_TYPES.has(a.type)) continue
       if (!cache.has(a.id)) {
-        pending.push(a)
+        // 公开分享模式不做实时搜索（该端点需登录），只画已绑定坐标
+        if (!publicToken) pending.push(a)
         continue
       }
       const loc = cache.get(a.id)
@@ -218,8 +222,10 @@ export default function MapPanel({
     }
     let cancelled = false
     setRouteLoading(true)
-    mapApi
-      .getDayRoute(day.id, mode)
+    const req = publicToken
+      ? mapApi.getShareRoute(publicToken, day.id, mode)
+      : mapApi.getDayRoute(day.id, mode)
+    req
       .then((r) => {
         if (!cancelled) setRoute(r)
       })
@@ -233,7 +239,7 @@ export default function MapPanel({
     return () => {
       cancelled = true
     }
-  }, [activeDay, preciseCount, mode])
+  }, [activeDay, preciseCount, mode, publicToken])
 
   // --- 绘制 markers + 路线 ---
   useEffect(() => {
