@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 )
 
 // providerAmap is the locations.provider value for all Amap-sourced rows.
@@ -77,15 +78,48 @@ func (s *Service) Search(ctx context.Context, q, city string) ([]Location, error
 
 // Locate returns the best single match for an activity title, or nil when the
 // provider knows nothing about it — a miss is not an error (map fallback).
+// When city is set, results implausibly far from it (see maxCityKm) are dropped:
+// a generic title like "长城脚下农家菜" otherwise resolves to a same-named POI on
+// the other side of the country and destroys the day's fit/route.
 func (s *Service) Locate(ctx context.Context, title, city string) (*Location, error) {
 	res, err := s.Search(ctx, title, city)
 	if err != nil {
 		return nil, err
 	}
+	res = filterByCity(res, city)
 	if len(res) == 0 {
 		return nil, nil
 	}
 	return &res[0], nil
+}
+
+// filterByCity drops results whose provider city disagrees with the trip
+// destination. Results with an empty city (sparse geocode rows) are kept.
+func filterByCity(res []Location, city string) []Location {
+	if city == "" {
+		return res
+	}
+	out := make([]Location, 0, len(res))
+	for _, l := range res {
+		if l.City != nil && *l.City != "" && !cityMatches(*l.City, city) {
+			continue
+		}
+		out = append(out, l)
+	}
+	return out
+}
+
+// cityMatches compares provider city names ("北京市") with the trip destination
+// ("北京"/"北京市"/"延庆"): prefix-equality after stripping common suffixes.
+func cityMatches(providerCity, dest string) bool {
+	norm := func(s string) string {
+		for _, suf := range []string{"市", "地区", "盟", "自治州", "特别行政区"} {
+			s = strings.TrimSuffix(s, suf)
+		}
+		return s
+	}
+	p, d := norm(providerCity), norm(dest)
+	return p == d || strings.HasPrefix(p, d) || strings.HasPrefix(d, p)
 }
 
 // placeIDOf returns the provider place id, synthesizing a stable one from the

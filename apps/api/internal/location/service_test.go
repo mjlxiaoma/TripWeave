@@ -34,7 +34,7 @@ type fakeStore struct {
 	err     error
 }
 
-func (f *fakeStore) Upsert(_ context.Context, _ string, placeID string, _ POI) (*Location, error) {
+func (f *fakeStore) Upsert(_ context.Context, _ string, placeID string, p POI) (*Location, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -42,7 +42,12 @@ func (f *fakeStore) Upsert(_ context.Context, _ string, placeID string, _ POI) (
 	if f.loc != nil {
 		return f.loc, nil
 	}
-	return &Location{ID: "loc-" + placeID, Name: "X"}, nil
+	var city *string
+	if p.City != "" {
+		c := p.City
+		city = &c
+	}
+	return &Location{ID: "loc-" + placeID, Name: p.Name, City: city, Latitude: p.Latitude, Longitude: p.Longitude}, nil
 }
 
 // --- Search ---
@@ -202,5 +207,71 @@ func TestRouteForDayCapsPoints(t *testing.T) {
 	}
 	if len(route.ActivityIDs) != maxRoutedPoints {
 		t.Errorf("want %d capped points, got %d", maxRoutedPoints, len(route.ActivityIDs))
+	}
+}
+
+func TestCityMatches(t *testing.T) {
+	cases := []struct {
+		provider, dest string
+		want           bool
+	}{
+		{"北京市", "北京", true},
+		{"北京", "北京市", true},
+		{"北京市延庆区", "北京", true},
+		{"三亚市", "北京", false},
+		{"上海市", "北京", false},
+		{"北京市", "上海", false},
+	}
+	for _, c := range cases {
+		if got := cityMatches(c.provider, c.dest); got != c.want {
+			t.Errorf("cityMatches(%q,%q)=%v want %v", c.provider, c.dest, got, c.want)
+		}
+	}
+}
+
+func TestFilterByCityDropsFarMatches(t *testing.T) {
+	keep := Location{Name: "近"}
+	far := Location{Name: "远"}
+	cityBeijing := "北京市"
+	citySanya := "三亚市"
+	keep.City = &cityBeijing
+	far.City = &citySanya
+	out := filterByCity([]Location{keep, far}, "北京")
+	if len(out) != 1 || out[0].Name != "近" {
+		t.Errorf("want only the in-city result, got %+v", out)
+	}
+	// 无目的地时不过滤
+	if n := len(filterByCity([]Location{keep, far}, "")); n != 2 {
+		t.Errorf("empty city should keep all, got %d", n)
+	}
+}
+
+func TestLocateDropsCrossCityMismatch(t *testing.T) {
+	// 「长城脚下农家菜」真实场景：provider 同名词条全国都有，第一个命中三亚 —
+	// 目的地北京时应过滤三亚、返回北京延庆的那家。
+	svc := NewService(&fakeProvider{pois: []POI{
+		{ProviderPlaceID: "SY", Name: "长城脚下农家菜", City: "三亚市", Longitude: 109.6, Latitude: 18.6},
+		{ProviderPlaceID: "BJ", Name: "长城脚下农家菜(延庆)", City: "北京市", Longitude: 116.0, Latitude: 40.3},
+	}}, &fakeStore{})
+	loc, err := svc.Locate(context.Background(), "长城脚下农家菜", "北京")
+	if err != nil {
+		t.Fatalf("Locate: %v", err)
+	}
+	if loc == nil || loc.ID != "loc-BJ" {
+		t.Errorf("want Beijing match, got %+v", loc)
+	}
+}
+
+func TestLocateAllCrossCityReturnsNil(t *testing.T) {
+	// 全部命中外城且目的地明确：宁可不定位（前端灰色兜底），也不绑定错城。
+	svc := NewService(&fakeProvider{pois: []POI{
+		{ProviderPlaceID: "SY", Name: "X", City: "三亚市", Longitude: 109.6, Latitude: 18.6},
+	}}, &fakeStore{})
+	loc, err := svc.Locate(context.Background(), "X", "北京")
+	if err != nil {
+		t.Fatalf("Locate: %v", err)
+	}
+	if loc != nil {
+		t.Errorf("want nil (unlocated), got %+v", loc)
 	}
 }

@@ -3,15 +3,20 @@ package planner
 import (
 	"context"
 	"log/slog"
-	"sync"
+	"time"
 
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/day"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/location"
 )
 
-// locateConcurrency bounds concurrent provider calls while auto-locating a
-// freshly generated itinerary (keeps bursts within the daily quota's courtesy).
-const locateConcurrency = 4
+// locateInterval throttles auto-locate lookups. Amap personal-tier Web
+// Service keys are capped at ~1 QPS for POI search (CUQPS errors observed
+// even at concurrency 2), so we run serially with a gap. A QPS failure gets
+// exactly one retry after a longer backoff.
+const (
+	locateInterval     = 300 * time.Millisecond
+	locateRetryBackoff = 800 * time.Millisecond
+)
 
 // locatableTypes are the activity kinds worth a provider lookup; "自由活动" or
 // "市内交通" titles geocode to noise, so transport/free_time/other stay bare.
@@ -39,24 +44,23 @@ func (e *Engine) locateActivities(acts []day.Activity, city string) {
 	go func() {
 		// Detached from the request: the SSE turn may end long before lookups
 		// finish, and each lookup persists independently of the others.
+		// Serial + throttled to stay under the provider's QPS cap.
 		ctx := context.Background()
-		sem := make(chan struct{}, locateConcurrency)
-		var wg sync.WaitGroup
-		for _, a := range items {
-			wg.Add(1)
-			sem <- struct{}{}
-			go func(act day.Activity) {
-				defer wg.Done()
-				defer func() { <-sem }()
-				e.locateOne(ctx, act, city)
-			}(a)
+		for i, a := range items {
+			if i > 0 {
+				time.Sleep(locateInterval)
+			}
+			e.locateOne(ctx, a, city)
 		}
-		wg.Wait()
 	}()
 }
 
 func (e *Engine) locateOne(ctx context.Context, act day.Activity, city string) {
 	loc, err := e.locator.Locate(ctx, act.Title, city)
+	if err != nil && location.IsQPSLimited(err) {
+		time.Sleep(locateRetryBackoff)
+		loc, err = e.locator.Locate(ctx, act.Title, city)
+	}
 	if err != nil {
 		if err != location.ErrNoProvider {
 			slog.Warn("auto-locate failed", "activity", act.ID, "title", act.Title, "error", err)

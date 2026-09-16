@@ -9,12 +9,12 @@ import (
 // Location is a stored places-table row (the subset exposed to API clients).
 // Provider metadata stays internal; clients only need identity + coordinates.
 type Location struct {
-	ID        string   `json:"id"`
-	Name      string   `json:"name"`
-	Latitude  float64  `json:"latitude"`
-	Longitude float64  `json:"longitude"`
-	Address   *string  `json:"address"`
-	City      *string  `json:"city"`
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Address   *string `json:"address"`
+	City      *string `json:"city"`
 }
 
 // Repository persists locations (deduplicated by provider + provider_place_id).

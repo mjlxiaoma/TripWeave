@@ -21,6 +21,13 @@ var ErrNoProvider = errors.New("map provider not configured")
 // error payload). Handlers map it to 502.
 var ErrProvider = errors.New("map provider request failed")
 
+// IsQPSLimited reports whether err is Amap's per-second rate limit
+// (CUQPS_HAS_EXCEEDED_THE_LIMIT). Callers may retry after a short backoff —
+// unlike the daily quota, this one recovers within a second.
+func IsQPSLimited(err error) bool {
+	return errors.Is(err, ErrProvider) && strings.Contains(err.Error(), "CUQPS")
+}
+
 const defaultAmapBaseURL = "https://restapi.amap.com"
 
 // AmapClient talks to the Amap Web Service API (restapi.amap.com). All
