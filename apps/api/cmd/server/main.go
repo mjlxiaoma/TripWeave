@@ -22,6 +22,7 @@ import (
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/mail"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/planner"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/share"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/trip"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/user"
 	"github.com/mjlxiaoma/TripWeave/apps/api/pkg/database"
@@ -110,6 +111,8 @@ func main() {
 	engine := planner.NewEngine(trips, days, plannerRepo, provider, planner.NewRedisLocker(rdb), locSvc, cfg)
 	plannerHandler := planner.NewHandler(engine, plannerRepo, trips)
 
+	shareHandler := share.NewHandler(trips, days, locSvc)
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recover(log))
@@ -158,6 +161,13 @@ func main() {
 		mapLimited := middleware.RateLimit(20.0/60.0, 10)
 		authed.With(mapLimited).Get("/locations/search", locHandler.Search)
 		authed.With(mapLimited).Get("/days/{dayId}/route", locHandler.DayRoute)
+
+		// 分享：token 管理需登录，公开只读视图无需登录但限流（防爬取）
+		authed.Post("/trips/{id}/share", shareHandler.Create)
+		authed.Delete("/trips/{id}/share", shareHandler.Clear)
+		shareLimited := middleware.RateLimit(30.0/60.0, 20)
+		api.With(shareLimited).Get("/share/{token}", shareHandler.Trip)
+		api.With(shareLimited).Get("/share/{token}/days/{dayId}/route", shareHandler.Route)
 
 		// AI 端点按 IP 限流：LLM 调用成本高，约每 10s 一条消息
 		aiLimited := middleware.RateLimit(6.0/60.0, 3)

@@ -310,3 +310,53 @@ func rawOrNull(raw *json.RawMessage) any {
 	}
 	return []byte(*raw)
 }
+
+// --- share token（公开只读链接） ---
+
+// SetShareToken 生成（或复用已有）分享 token，返回当前值。
+// 幂等：已存在 token 时直接返回，避免分享链接每次刷新都变。
+func (r *Repository) SetShareToken(ctx context.Context, tripID, token string) (string, error) {
+	var out string
+	err := r.pool.QueryRow(ctx, `
+		UPDATE trips
+		SET share_token = COALESCE(share_token, $2),
+		    updated_at  = now()
+		WHERE id = $1
+		RETURNING share_token`, tripID, token).Scan(&out)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return out, err
+}
+
+// ClearShareToken 撤销分享（token 置空，旧链接立即失效）。
+func (r *Repository) ClearShareToken(ctx context.Context, tripID string) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE trips SET share_token = NULL, updated_at = now() WHERE id = $1`, tripID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// GetByShareToken 用公开 token 找行程（无需登录）。找不到即 ErrNotFound。
+func (r *Repository) GetByShareToken(ctx context.Context, token string) (*Trip, error) {
+	var t Trip
+	err := r.pool.QueryRow(ctx, `
+		SELECT id, owner_id, title, destination, start_date::text, end_date::text,
+		       travelers_count, status, created_at, updated_at
+		FROM trips
+		WHERE share_token = $1`, token).Scan(
+		&t.ID, &t.OwnerID, &t.Title, &t.Destination, &t.StartDate, &t.EndDate,
+		&t.TravelersCount, &t.Status, &t.CreatedAt, &t.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
