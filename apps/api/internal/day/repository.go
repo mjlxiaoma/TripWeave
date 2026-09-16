@@ -365,14 +365,17 @@ func (r *Repository) CreateActivity(ctx context.Context, dayID string, in Activi
 }
 
 // ActivityPatch carries optional activity updates; nil = leave unchanged.
+// ClearLocation explicitly unbinds the location (COALESCE alone cannot
+// distinguish "absent" from "set to null").
 type ActivityPatch struct {
-	Type       *string
-	Title      *string
-	StartTime  *string
-	EndTime    *string
-	Notes      *string
-	Status     *string
-	LocationID *string
+	Type          *string
+	Title         *string
+	StartTime     *string
+	EndTime       *string
+	Notes         *string
+	Status        *string
+	LocationID    *string
+	ClearLocation bool
 }
 
 // UpdateActivity patches an activity.
@@ -386,13 +389,13 @@ func (r *Repository) UpdateActivity(ctx context.Context, activityID string, p Ac
 				end_time    = COALESCE($5::time, end_time),
 				notes       = COALESCE($6, notes),
 				status      = COALESCE($7, status),
-				location_id = COALESCE($8::uuid, location_id),
+				location_id = CASE WHEN $9::bool THEN NULL ELSE COALESCE($8::uuid, location_id) END,
 				updated_at  = now()
 			WHERE id = $1
 			RETURNING *
 		)
 		SELECT `+actColsA+` FROM upd a`+actJoin,
-		activityID, p.Type, p.Title, p.StartTime, p.EndTime, p.Notes, p.Status, p.LocationID))
+		activityID, p.Type, p.Title, p.StartTime, p.EndTime, p.Notes, p.Status, p.LocationID, p.ClearLocation))
 }
 
 // DeleteActivity removes one activity.

@@ -51,13 +51,14 @@ type dayRequest struct {
 }
 
 type activityRequest struct {
-	Type       *string `json:"type"`
-	Title      *string `json:"title"`
-	StartTime  *string `json:"start_time"`
-	EndTime    *string `json:"end_time"`
-	Notes      *string `json:"notes"`
-	Status     *string `json:"status"`
-	LocationID *string `json:"location_id"`
+	Type          *string `json:"type"`
+	Title         *string `json:"title"`
+	StartTime     *string `json:"start_time"`
+	EndTime       *string `json:"end_time"`
+	Notes         *string `json:"notes"`
+	Status        *string `json:"status"`
+	LocationID    *string `json:"location_id"`
+	ClearLocation *bool   `json:"clear_location"`
 }
 
 type reorderRequest struct {
@@ -236,13 +237,14 @@ func (h *Handler) UpdateActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a, err := h.repo.UpdateActivity(r.Context(), activityID, ActivityPatch{
-		Type:       req.Type,
-		Title:      shared.TrimPtr(req.Title),
-		StartTime:  shared.TrimPtr(req.StartTime),
-		EndTime:    shared.TrimPtr(req.EndTime),
-		Notes:      shared.TrimPtr(req.Notes),
-		Status:     req.Status,
-		LocationID: shared.TrimPtr(req.LocationID),
+		Type:          req.Type,
+		Title:         shared.TrimPtr(req.Title),
+		StartTime:     shared.TrimPtr(req.StartTime),
+		EndTime:       shared.TrimPtr(req.EndTime),
+		Notes:         shared.TrimPtr(req.Notes),
+		Status:        req.Status,
+		LocationID:    shared.TrimPtr(req.LocationID),
+		ClearLocation: req.ClearLocation != nil && *req.ClearLocation,
 	})
 	if err != nil {
 		failActivity(w, err, "failed to update activity")
