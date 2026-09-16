@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import type { Trip, TripStatus } from '../../types'
 
 function BackIcon() {
@@ -26,8 +27,17 @@ function formatRange(trip: Trip): string {
   return `${trip.start_date} ~ ${trip.end_date}`
 }
 
+// isTraveling：今天是否落在行程日期范围内（用于「旅行模式」入口高亮）。
+function isTraveling(trip: Trip): boolean {
+  if (!trip.start_date || !trip.end_date) return false
+  const today = new Date()
+  const str = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  return str >= trip.start_date && str <= trip.end_date
+}
+
 export default function TripHeader({ trip, onBack }: Props) {
   const { t } = useTranslation()
+  const traveling = isTraveling(trip)
   return (
     <header className="sticky top-16 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
@@ -45,6 +55,16 @@ export default function TripHeader({ trip, onBack }: Props) {
             {[trip.destination, formatRange(trip)].filter(Boolean).join(' · ')}
           </p>
         </div>
+        <Link
+          to={`/trip/${trip.id}/today`}
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            traveling
+              ? 'bg-primary-600 text-white hover:bg-primary-700'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          {traveling ? `● ${t('today.enterTraveling')}` : t('today.enter')}
+        </Link>
         <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_BADGE[trip.status]}`}>
           {t(`trips.status.${trip.status}`)}
         </span>

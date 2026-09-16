@@ -10,6 +10,7 @@ import TripsPage from '../pages/TripsPage'
 import PlaceholderPage from '../pages/PlaceholderPage'
 import TripNewPage from '../pages/TripNewPage'
 import PlannerPage from '../features/planner/PlannerPage'
+import TodayPage from '../features/today/TodayPage'
 
 function FullPageLoading() {
   return (
@@ -71,6 +72,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <PlannerPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/trip/:tripId/today',
+        element: (
+          <RequireAuth>
+            <TodayPage />
           </RequireAuth>
         ),
       },
