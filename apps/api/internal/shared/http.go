@@ -41,6 +41,9 @@ func FailDB(w http.ResponseWriter, err error, msg string) {
 		case "22007", "22P02": // invalid datetime / text representation (bad date, time or uuid input)
 			phttp.Fail(w, http.StatusBadRequest, "VALIDATION", "malformed id, date or time value")
 			return
+		case "23503": // foreign key violation (e.g. binding an unknown location_id)
+			phttp.Fail(w, http.StatusBadRequest, "VALIDATION", "referenced record does not exist")
+			return
 		}
 	}
 	phttp.Fail(w, http.StatusInternalServerError, "INTERNAL", msg)

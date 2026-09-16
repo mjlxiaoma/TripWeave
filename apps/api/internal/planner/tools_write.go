@@ -54,6 +54,14 @@ func (e *Engine) toolCreateItinerary() Tool {
 				return toolError("创建行程失败: " + err.Error())
 			}
 
+			// Best-effort geocoding in the background so the map panel has
+			// coordinates without slowing down the tool response.
+			flat := make([]day.Activity, 0, len(created)*4)
+			for _, d := range created {
+				flat = append(flat, d.Activities...)
+			}
+			e.locateActivities(flat, cityOf(ec))
+
 			changes := []ChangeItem{}
 			for _, d := range created {
 				for _, a := range d.Activities {
@@ -148,6 +156,7 @@ func (e *Engine) toolCreateActivity() Tool {
 			if err != nil {
 				return toolError("创建失败: " + err.Error())
 			}
+			e.locateActivities([]day.Activity{*a}, cityOf(ec))
 			res := toolOK(fmt.Sprintf("已在 Day %d 添加「%s」", in.DayNumber, a.Title), a)
 			res.Changes = []ChangeItem{{DayNumber: in.DayNumber, Kind: "created", Title: a.Title}}
 			return res

@@ -23,13 +23,15 @@ type Engine struct {
 	repo     Store
 	provider ai.Provider
 	locker   Locker
+	locator  Locator
 	cfg      *config.Config
 }
 
 // NewEngine wires the planner engine. trips/days/repo are satisfied by the
-// concrete repositories; locker by the Redis-backed RedisLocker.
-func NewEngine(trips TripStore, days DayStore, repo Store, provider ai.Provider, locker Locker, cfg *config.Config) *Engine {
-	return &Engine{trips: trips, days: days, repo: repo, provider: provider, locker: locker, cfg: cfg}
+// concrete repositories; locker by the Redis-backed RedisLocker. locator may be
+// nil: without a map provider, activities are simply created unlocated.
+func NewEngine(trips TripStore, days DayStore, repo Store, provider ai.Provider, locker Locker, locator Locator, cfg *config.Config) *Engine {
+	return &Engine{trips: trips, days: days, repo: repo, provider: provider, locker: locker, locator: locator, cfg: cfg}
 }
 
 // --- SSE event payloads ---

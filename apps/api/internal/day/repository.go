@@ -33,20 +33,32 @@ type Day struct {
 	Activities []Activity `json:"activities"`
 }
 
-// Activity is one scheduled item inside a day. location_id is intentionally not
-// exposed yet: the map (P9) and AI (P10) phases attach real location records.
+// LocationRef is the location summary embedded in an activity response (joined
+// from the shared locations table; nil when the activity is not geocoded yet).
+type LocationRef struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Address   *string `json:"address"`
+}
+
+// Activity is one scheduled item inside a day. Location is attached when the
+// map phase (auto-locate on creation, or manual bind) has resolved the title.
 type Activity struct {
-	ID        string    `json:"id"`
-	DayID     string    `json:"day_id"`
-	Type      string    `json:"type"`
-	Title     string    `json:"title"`
-	StartTime *string   `json:"start_time"`
-	EndTime   *string   `json:"end_time"`
-	SortOrder int       `json:"sort_order"`
-	Notes     *string   `json:"notes"`
-	Status    string    `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID         string       `json:"id"`
+	DayID      string       `json:"day_id"`
+	Type       string       `json:"type"`
+	Title      string       `json:"title"`
+	StartTime  *string      `json:"start_time"`
+	EndTime    *string      `json:"end_time"`
+	SortOrder  int          `json:"sort_order"`
+	Notes      *string      `json:"notes"`
+	Status     string       `json:"status"`
+	LocationID *string      `json:"location_id"`
+	Location   *LocationRef `json:"location"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
 }
 
 // Repository provides day/activity persistence.
@@ -59,17 +71,18 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-// Bare column lists used for INSERT/UPDATE RETURNING (a single-table context
-// cannot reference a table alias).
 const dayCols = `id, trip_id, day_number, date::text, title, created_at, updated_at`
 
 // to_char 输出 HH:MM —— time::text 会带秒（"09:00:00"）,下游（前端展示、
 // AI 快照、变更摘要）统一要 HH:MM。
-const actColsBare = `id, trip_day_id, type, title, to_char(start_time, 'HH24:MI'), to_char(end_time, 'HH24:MI'),
-	sort_order, notes, status, created_at, updated_at`
-
+// Every activity read uses this single column list with actJoin (including
+// INSERT/UPDATE via a CTE, since RETURNING cannot join) so scanActivity stays
+// uniform. Column order must match scanActivity's Scan targets exactly.
 const actColsA = `a.id, a.trip_day_id, a.type, a.title, to_char(a.start_time, 'HH24:MI'), to_char(a.end_time, 'HH24:MI'),
-	a.sort_order, a.notes, a.status, a.created_at, a.updated_at`
+	a.sort_order, a.notes, a.status, a.location_id, a.created_at, a.updated_at,
+	l.id, l.name, l.latitude, l.longitude, l.address`
+
+const actJoin = ` LEFT JOIN locations l ON l.id = a.location_id`
 
 func scanDay(row pgx.Row) (*Day, error) {
 	var d Day
@@ -86,15 +99,35 @@ func scanDay(row pgx.Row) (*Day, error) {
 
 func scanActivity(row pgx.Row) (*Activity, error) {
 	var a Activity
+	var locID, locName, locAddr *string
+	var locLat, locLng *float64
 	err := row.Scan(&a.ID, &a.DayID, &a.Type, &a.Title, &a.StartTime, &a.EndTime,
-		&a.SortOrder, &a.Notes, &a.Status, &a.CreatedAt, &a.UpdatedAt)
+		&a.SortOrder, &a.Notes, &a.Status, &a.LocationID, &a.CreatedAt, &a.UpdatedAt,
+		&locID, &locName, &locLat, &locLng, &locAddr)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
+	if locID != nil {
+		a.Location = &LocationRef{
+			ID:        *locID,
+			Name:      derefOr(locName),
+			Latitude:  derefOr(locLat),
+			Longitude: derefOr(locLng),
+			Address:   locAddr,
+		}
+	}
 	return &a, nil
+}
+
+func derefOr[T any](p *T) T {
+	var zero T
+	if p == nil {
+		return zero
+	}
+	return *p
 }
 
 // TripIDForDay resolves the trip owning a day (ErrNotFound when the day is gone).
@@ -163,44 +196,43 @@ func (r *Repository) activitiesByTrip(ctx context.Context, tripID string) ([]Act
 	rows, err := r.pool.Query(ctx, `
 		SELECT `+actColsA+`
 		FROM activities a
-		JOIN trip_days d ON d.id = a.trip_day_id
+		JOIN trip_days d ON d.id = a.trip_day_id`+actJoin+`
 		WHERE d.trip_id = $1
 		ORDER BY a.sort_order, a.created_at`, tripID)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	acts := []Activity{}
 	for rows.Next() {
-		var a Activity
-		if err := rows.Scan(&a.ID, &a.DayID, &a.Type, &a.Title, &a.StartTime, &a.EndTime,
-			&a.SortOrder, &a.Notes, &a.Status, &a.CreatedAt, &a.UpdatedAt); err != nil {
-			rows.Close()
+		a, err := scanActivity(rows)
+		if err != nil {
 			return nil, err
 		}
-		acts = append(acts, a)
+		acts = append(acts, *a)
 	}
-	rows.Close()
 	return acts, rows.Err()
 }
 
 // ActivitiesByDay returns the activities of a single day in display order.
 func (r *Repository) ActivitiesByDay(ctx context.Context, dayID string) ([]Activity, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT `+actColsBare+` FROM activities WHERE trip_day_id = $1 ORDER BY sort_order, created_at`, dayID)
+		SELECT `+actColsA+`
+		FROM activities a`+actJoin+`
+		WHERE a.trip_day_id = $1
+		ORDER BY a.sort_order, a.created_at`, dayID)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	acts := []Activity{}
 	for rows.Next() {
-		var a Activity
-		if err := rows.Scan(&a.ID, &a.DayID, &a.Type, &a.Title, &a.StartTime, &a.EndTime,
-			&a.SortOrder, &a.Notes, &a.Status, &a.CreatedAt, &a.UpdatedAt); err != nil {
-			rows.Close()
+		a, err := scanActivity(rows)
+		if err != nil {
 			return nil, err
 		}
-		acts = append(acts, a)
+		acts = append(acts, *a)
 	}
-	rows.Close()
 	return acts, rows.Err()
 }
 
@@ -304,15 +336,17 @@ func (r *Repository) DeleteDay(ctx context.Context, tripID, dayID string) error 
 
 // ActivityInput carries creation fields; empty Type/Status fall back to defaults.
 type ActivityInput struct {
-	Type      string
-	Title     string
-	StartTime *string
-	EndTime   *string
-	Notes     *string
-	Status    string
+	Type       string
+	Title      string
+	StartTime  *string
+	EndTime    *string
+	Notes      *string
+	Status     string
+	LocationID *string
 }
 
-// CreateActivity appends an activity to the end of a day.
+// CreateActivity appends an activity to the end of a day. The CTE lets the
+// RETURNING row join its location (RETURNING alone cannot reference other tables).
 func (r *Repository) CreateActivity(ctx context.Context, dayID string, in ActivityInput) (*Activity, error) {
 	var next int
 	if err := r.pool.QueryRow(ctx,
@@ -320,37 +354,45 @@ func (r *Repository) CreateActivity(ctx context.Context, dayID string, in Activi
 		return nil, err
 	}
 	return scanActivity(r.pool.QueryRow(ctx, `
-		INSERT INTO activities (trip_day_id, type, title, start_time, end_time, sort_order, notes, status)
-		VALUES ($1, $2, $3, $4::time, $5::time, $6, $7, $8)
-		RETURNING `+actColsBare,
+		WITH ins AS (
+			INSERT INTO activities (trip_day_id, type, title, start_time, end_time, sort_order, notes, status, location_id)
+			VALUES ($1, $2, $3, $4::time, $5::time, $6, $7, $8, $9::uuid)
+			RETURNING *
+		)
+		SELECT `+actColsA+` FROM ins a`+actJoin,
 		dayID, orDefault(in.Type, "other"), in.Title, in.StartTime, in.EndTime, next, in.Notes,
-		orDefault(in.Status, "planned")))
+		orDefault(in.Status, "planned"), in.LocationID))
 }
 
 // ActivityPatch carries optional activity updates; nil = leave unchanged.
 type ActivityPatch struct {
-	Type      *string
-	Title     *string
-	StartTime *string
-	EndTime   *string
-	Notes     *string
-	Status    *string
+	Type       *string
+	Title      *string
+	StartTime  *string
+	EndTime    *string
+	Notes      *string
+	Status     *string
+	LocationID *string
 }
 
 // UpdateActivity patches an activity.
 func (r *Repository) UpdateActivity(ctx context.Context, activityID string, p ActivityPatch) (*Activity, error) {
 	return scanActivity(r.pool.QueryRow(ctx, `
-		UPDATE activities SET
-			type       = COALESCE($2, type),
-			title      = COALESCE($3, title),
-			start_time = COALESCE($4::time, start_time),
-			end_time   = COALESCE($5::time, end_time),
-			notes      = COALESCE($6, notes),
-			status     = COALESCE($7, status),
-			updated_at = now()
-		WHERE id = $1
-		RETURNING `+actColsBare,
-		activityID, p.Type, p.Title, p.StartTime, p.EndTime, p.Notes, p.Status))
+		WITH upd AS (
+			UPDATE activities SET
+				type        = COALESCE($2, type),
+				title       = COALESCE($3, title),
+				start_time  = COALESCE($4::time, start_time),
+				end_time    = COALESCE($5::time, end_time),
+				notes       = COALESCE($6, notes),
+				status      = COALESCE($7, status),
+				location_id = COALESCE($8::uuid, location_id),
+				updated_at  = now()
+			WHERE id = $1
+			RETURNING *
+		)
+		SELECT `+actColsA+` FROM upd a`+actJoin,
+		activityID, p.Type, p.Title, p.StartTime, p.EndTime, p.Notes, p.Status, p.LocationID))
 }
 
 // DeleteActivity removes one activity.
@@ -439,11 +481,14 @@ func (r *Repository) CreateItinerary(ctx context.Context, tripID string, days []
 		}
 		for j, a := range in.Activities {
 			act, err := scanActivity(tx.QueryRow(ctx, `
-				INSERT INTO activities (trip_day_id, type, title, start_time, end_time, sort_order, notes, status)
-				VALUES ($1, $2, $3, $4::time, $5::time, $6, $7, $8)
-				RETURNING `+actColsBare,
+				WITH ins AS (
+					INSERT INTO activities (trip_day_id, type, title, start_time, end_time, sort_order, notes, status, location_id)
+					VALUES ($1, $2, $3, $4::time, $5::time, $6, $7, $8, $9::uuid)
+					RETURNING *
+				)
+				SELECT `+actColsA+` FROM ins a`+actJoin,
 				d.ID, orDefault(a.Type, "other"), a.Title, a.StartTime, a.EndTime, j+1, a.Notes,
-				orDefault(a.Status, "planned")))
+				orDefault(a.Status, "planned"), a.LocationID))
 			if err != nil {
 				return nil, err
 			}
@@ -461,7 +506,7 @@ func (r *Repository) CreateItinerary(ctx context.Context, tripID string, days []
 // change summaries).
 func (r *Repository) GetActivity(ctx context.Context, activityID string) (*Activity, error) {
 	return scanActivity(r.pool.QueryRow(ctx,
-		`SELECT `+actColsBare+` FROM activities WHERE id = $1`, activityID))
+		`SELECT `+actColsA+` FROM activities a`+actJoin+` WHERE a.id = $1`, activityID))
 }
 
 func orDefault(s, fallback string) string {

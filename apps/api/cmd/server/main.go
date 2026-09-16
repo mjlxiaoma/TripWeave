@@ -18,6 +18,7 @@ import (
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/day"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/location"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/mail"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/planner"
@@ -96,7 +97,17 @@ func main() {
 		log.Warn("DEEPSEEK_API_KEY not set: AI chat endpoints will be unavailable")
 	}
 	plannerRepo := planner.NewRepository(pool)
-	engine := planner.NewEngine(trips, days, plannerRepo, provider, planner.NewRedisLocker(rdb), cfg)
+
+	// Map service: like the AI provider, optional at boot — without
+	// AMAP_SERVICE_KEY the API still runs, map endpoints then return 503 and
+	// activities are created without auto-geocoding.
+	if cfg.MapAPIKey == "" {
+		log.Warn("AMAP_SERVICE_KEY not set: map search/route endpoints will be unavailable")
+	}
+	locSvc := location.NewService(location.NewAmapClient(cfg.MapAPIKey), location.NewRepository(pool))
+	locHandler := location.NewHandler(locSvc, days, trips)
+
+	engine := planner.NewEngine(trips, days, plannerRepo, provider, planner.NewRedisLocker(rdb), locSvc, cfg)
 	plannerHandler := planner.NewHandler(engine, plannerRepo, trips)
 
 	r := chi.NewRouter()
@@ -142,6 +153,11 @@ func main() {
 		authed.Post("/days/{dayId}/activities/reorder", dayHandler.ReorderActivities)
 		authed.Patch("/activities/{id}", dayHandler.UpdateActivity)
 		authed.Delete("/activities/{id}", dayHandler.DeleteActivity)
+
+		// 地图端点按 IP 限流：每次搜索/路线都烧上游高德 Web 服务配额
+		mapLimited := middleware.RateLimit(20.0/60.0, 10)
+		authed.With(mapLimited).Get("/locations/search", locHandler.Search)
+		authed.With(mapLimited).Get("/days/{dayId}/route", locHandler.DayRoute)
 
 		// AI 端点按 IP 限流：LLM 调用成本高，约每 10s 一条消息
 		aiLimited := middleware.RateLimit(6.0/60.0, 3)

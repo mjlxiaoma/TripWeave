@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/day"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/location"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/trip"
 )
 
@@ -30,6 +31,12 @@ type DayStore interface {
 	ReorderActivities(ctx context.Context, dayID string, ids []string) error
 	TripIDForActivity(ctx context.Context, activityID string) (string, error)
 	GetActivity(ctx context.Context, activityID string) (*day.Activity, error)
+}
+
+// Locator resolves an activity title to a map location (nil-safe: the engine
+// treats a nil Locator or a nil result as "not located" and keeps going).
+type Locator interface {
+	Locate(ctx context.Context, title, city string) (*location.Location, error)
 }
 
 // Store is the planner's own persistence (conversations/messages/tool calls).

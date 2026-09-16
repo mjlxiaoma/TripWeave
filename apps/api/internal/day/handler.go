@@ -51,12 +51,13 @@ type dayRequest struct {
 }
 
 type activityRequest struct {
-	Type      *string `json:"type"`
-	Title     *string `json:"title"`
-	StartTime *string `json:"start_time"`
-	EndTime   *string `json:"end_time"`
-	Notes     *string `json:"notes"`
-	Status    *string `json:"status"`
+	Type       *string `json:"type"`
+	Title      *string `json:"title"`
+	StartTime  *string `json:"start_time"`
+	EndTime    *string `json:"end_time"`
+	Notes      *string `json:"notes"`
+	Status     *string `json:"status"`
+	LocationID *string `json:"location_id"`
 }
 
 type reorderRequest struct {
@@ -194,12 +195,13 @@ func (h *Handler) CreateActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a, err := h.repo.CreateActivity(r.Context(), dayID, ActivityInput{
-		Type:      shared.Deref(req.Type),
-		Title:     strings.TrimSpace(shared.Deref(req.Title)),
-		StartTime: shared.TrimPtr(req.StartTime),
-		EndTime:   shared.TrimPtr(req.EndTime),
-		Notes:     shared.TrimPtr(req.Notes),
-		Status:    shared.Deref(req.Status),
+		Type:       shared.Deref(req.Type),
+		Title:      strings.TrimSpace(shared.Deref(req.Title)),
+		StartTime:  shared.TrimPtr(req.StartTime),
+		EndTime:    shared.TrimPtr(req.EndTime),
+		Notes:      shared.TrimPtr(req.Notes),
+		Status:     shared.Deref(req.Status),
+		LocationID: shared.TrimPtr(req.LocationID),
 	})
 	if err != nil {
 		shared.FailDB(w, err, "failed to create activity")
@@ -234,12 +236,13 @@ func (h *Handler) UpdateActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a, err := h.repo.UpdateActivity(r.Context(), activityID, ActivityPatch{
-		Type:      req.Type,
-		Title:     shared.TrimPtr(req.Title),
-		StartTime: shared.TrimPtr(req.StartTime),
-		EndTime:   shared.TrimPtr(req.EndTime),
-		Notes:     shared.TrimPtr(req.Notes),
-		Status:    req.Status,
+		Type:       req.Type,
+		Title:      shared.TrimPtr(req.Title),
+		StartTime:  shared.TrimPtr(req.StartTime),
+		EndTime:    shared.TrimPtr(req.EndTime),
+		Notes:      shared.TrimPtr(req.Notes),
+		Status:     req.Status,
+		LocationID: shared.TrimPtr(req.LocationID),
 	})
 	if err != nil {
 		failActivity(w, err, "failed to update activity")
@@ -418,6 +421,9 @@ func validateActivity(req *activityRequest, isCreate bool) string {
 	}
 	if req.Notes != nil && utf8.RuneCountInString(*req.Notes) > 2000 {
 		return "notes must be <= 2000 characters"
+	}
+	if req.LocationID != nil && !shared.IsUUID(*req.LocationID) {
+		return "location_id must be a valid id"
 	}
 	return ""
 }

@@ -149,7 +149,7 @@ func newEngine(t *testing.T, p ai.Provider, tr TripStore, d *fakeDays, lk *fakeL
 	cfg := config.Load()
 	cfg.AIMaxToolRounds = 5
 	cfg.AITimeout = 5 * time.Second
-	return NewEngine(tr, d, &fakeStore{}, p, lk, cfg)
+	return NewEngine(tr, d, &fakeStore{}, p, lk, nil, cfg)
 }
 
 func baseDetail() *trip.Detail {
