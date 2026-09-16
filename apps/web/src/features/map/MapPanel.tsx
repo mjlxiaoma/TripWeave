@@ -39,6 +39,22 @@ function fmtDuration(s: number): string {
   return `${Math.round(s / 60)}`
 }
 
+// haversineKm：两点大圆距离（km），fallback 锚过滤用。
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return 2 * 6371 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+// fallback 搜索同样会全国错绑（"日隆镇晚餐"→ 丽江藏餐吧）。与后端锚链同理：
+// 灰点距任一精确定位锚超过此距离时丢弃。阈值与后端 maxAnchorKm 一致——
+// 一天行程半径很少超 300km，而典型错绑（阿坝→丽江 518km、阿坝→北京 1500km）都在 400km 外。
+const FALLBACK_MAX_ANCHOR_KM = 400
+
 // markerHTML 生成编号圆点：选中放大，未定位的灰色。
 function markerHTML(n: number, precise: boolean, selected: boolean): string {
   const bg = selected ? '#1d4ed8' : precise ? '#2563eb' : '#94a3b8'
@@ -79,7 +95,13 @@ export default function MapPanel({
   const mapEnabled = useMemo(() => Boolean(import.meta.env.VITE_AMAP_KEY), [])
 
   // 当前展示的天：外部选中的优先，否则第一天。
-  const activeDay: Day | undefined = days.find((d) => d.id === selectedDayId) ?? days[0]
+  // useMemo 稳定引用——否则 days.find() 每次渲染都返回新数组里看似相同实则
+  // 新引用的对象，effect 因引用漂移反复重跑（cleanup 取消搜索→搜索永不完→
+  // 永远重发，最终触发 Maximum update depth 与限流 429/502）。
+  const activeDay: Day | undefined = useMemo(
+    () => days.find((d) => d.id === selectedDayId) ?? days[0],
+    [days, selectedDayId],
+  )
   const city = destination ?? ''
 
   // --- 初始化地图（mount 一次） ---
@@ -117,7 +139,9 @@ export default function MapPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapEnabled])
 
-  // --- 点位计算：已绑定坐标直接画，未绑定的走实时搜索兜底（带缓存） ---
+  // --- 点位计算：已绑定坐标直接画，未绑定的走实时搜索兜底（带缓存 + 锚过滤） ---
+  // 无 cacheVersion 自增：搜索完成后直接局部 setPoints，effect 只在
+  // activeDay/city 变化时运行——从结构上消除 setState→重渲染→effect 的循环。
   useEffect(() => {
     const day = activeDay
     if (!day) {
@@ -125,21 +149,37 @@ export default function MapPanel({
       return
     }
     const cache = fallbackCache.current
-    const direct: PlacedPoint[] = []
+    const precise = day.activities
+      .filter((a) => a.location)
+      .map((a) => ({
+        activity: a,
+        lng: a.location!.longitude,
+        lat: a.location!.latitude,
+        precise: true,
+      }))
+    // 锚过滤：灰点离所有精点太远（跨省级错绑）即丢弃
+    const accept = (loc: Location): boolean =>
+      precise.length === 0 ||
+      precise.some(
+        (p) => haversineKm(p.lat, p.lng, loc.latitude, loc.longitude) <= FALLBACK_MAX_ANCHOR_KM,
+      )
+    const extra: PlacedPoint[] = []
     const pending: Activity[] = []
     for (const a of day.activities) {
-      if (a.location) {
-        direct.push({ activity: a, lng: a.location.longitude, lat: a.location.latitude, precise: true })
-      } else if (cache.has(a.id)) {
-        const loc = cache.get(a.id)
-        if (loc) direct.push({ activity: a, lng: loc.longitude, lat: loc.latitude, precise: false })
-      } else if (SEARCHABLE_TYPES.has(a.type)) {
+      if (a.location || !SEARCHABLE_TYPES.has(a.type)) continue
+      if (!cache.has(a.id)) {
         pending.push(a)
+        continue
+      }
+      const loc = cache.get(a.id)
+      if (loc && accept(loc)) {
+        extra.push({ activity: a, lng: loc.longitude, lat: loc.latitude, precise: false })
       }
     }
-    setPoints(direct)
-    if (pending.length === 0) return
+    const byOrder = (x: PlacedPoint, y: PlacedPoint) => x.activity.sort_order - y.activity.sort_order
+    setPoints([...precise, ...extra].sort(byOrder))
 
+    if (pending.length === 0) return
     let cancelled = false
     Promise.all(
       pending.map((a) =>
@@ -150,23 +190,19 @@ export default function MapPanel({
       ),
     ).then((results) => {
       if (cancelled) return
-      const extra: PlacedPoint[] = []
+      const newExtra = [...extra]
       for (const { a, loc } of results) {
         cache.set(a.id, loc)
-        if (loc) extra.push({ activity: a, lng: loc.longitude, lat: loc.latitude, precise: false })
+        if (loc && accept(loc)) {
+          newExtra.push({ activity: a, lng: loc.longitude, lat: loc.latitude, precise: false })
+        }
       }
-      if (extra.length > 0) {
-        // 兜底点插入到其活动时间顺序中（保持编号与行程顺序一致）
-        const merged = [...direct, ...extra].sort(
-          (x, y) => x.activity.sort_order - y.activity.sort_order,
-        )
-        setPoints(merged)
-      }
+      setPoints([...precise, ...newExtra].sort(byOrder))
     })
     return () => {
       cancelled = true
     }
-    // activeDay 引用在 days 刷新时变化；缓存挡住重复搜索请求。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeDay, city])
 
   // --- 路线：仅基于已绑定坐标的活动（后端路线数据源），>=2 点才请求 ---
@@ -251,8 +287,13 @@ export default function MapPanel({
     // fitView 一次、随后正确 points 到达时又不再 fit（视野卡在旧天）。
     const pointsMatchDay = points.length > 0 && points[0].activity.day_id === activeDay?.id
     if (pointsMatchDay && fittedDayRef.current !== activeDay?.id) {
-      map.setFitView(null, false, [40, 40, 40, 40])
-      fittedDayRef.current = activeDay?.id ?? null
+      // 显式传 overlays：setFitView(null) 读「全部覆盖物」对刚 add 的 marker
+      // 有 bounds 时序坑（首次加载静默不生效）；immediately=true 同步跳转。
+      const overlays = [...markersRef.current, ...polylinesRef.current]
+      if (overlays.length > 0) {
+        map.setFitView(overlays, true, [40, 40, 40, 40])
+        fittedDayRef.current = activeDay?.id ?? null
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [points, route, ready, activeDay?.id])
