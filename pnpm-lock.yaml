@@ -10,6 +10,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@amap/amap-jsapi-loader':
+        specifier: ^1.0.1
+        version: 1.0.1
       i18next:
         specifier: ^26.4.2
         version: 26.4.2(typescript@6.0.3)
@@ -58,6 +61,9 @@ importers:
         version: 8.2.2(@types/node@24.13.3)(jiti@2.7.0)
 
 packages:
+
+  '@amap/amap-jsapi-loader@1.0.1':
+    resolution: {integrity: sha512-nPyLKt7Ow/ThHLkSvn2etQlUzqxmTVgK7bIgwdBRTg2HK5668oN7xVxkaiRe3YZEzGzfV2XgH5Jmu2T73ljejw==}
 
   '@babel/runtime@7.29.7':
     resolution: {integrity: sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==}
@@ -779,6 +785,8 @@ packages:
         optional: true
 
 snapshots:
+
+  '@amap/amap-jsapi-loader@1.0.1': {}
 
   '@babel/runtime@7.29.7': {}
 
