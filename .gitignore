@@ -26,4 +26,4 @@ docs/
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+.vscode/.env.prod.local

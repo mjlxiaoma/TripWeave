@@ -79,6 +79,9 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      # 钉 Node 大版本：Render 静态站默认 Node 可能太老，跑不动 pnpm 11 + Vite 8
+      - key: NODE_VERSION
+        value: "22"
       - key: VITE_API_BASE
         sync: false   # 填 https://tripweave-api.onrender.com/api/v1
       - key: VITE_AMAP_KEY
