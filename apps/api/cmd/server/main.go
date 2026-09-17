@@ -61,7 +61,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	rdb, err := redis.NewClient(ctx, cfg.RedisAddr, cfg.RedisPassword)
+	rdb, err := redis.NewClient(ctx, cfg.RedisAddr, cfg.RedisPassword, cfg.RedisTLS)
 	if err != nil {
 		log.Error("redis unavailable", "error", err)
 		os.Exit(1)

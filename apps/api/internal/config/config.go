@@ -23,6 +23,7 @@ type Config struct {
 	DatabaseURL     string
 	RedisAddr       string
 	RedisPassword   string
+	RedisTLS        bool // 托管 Redis（Upstash 等）需要 TLS
 	JWTSecret       string
 	AccessTTL       time.Duration
 	RefreshTTL      time.Duration
@@ -63,6 +64,7 @@ func Load() *Config {
 		DatabaseURL:     getenv("DATABASE_URL", "postgres://tripweave:tripweave@127.0.0.1:5433/tripweave?sslmode=disable"),
 		RedisAddr:       getenv("REDIS_ADDR", "127.0.0.1:6380"),
 		RedisPassword:   os.Getenv("REDIS_PASSWORD"),
+		RedisTLS:        os.Getenv("REDIS_TLS") == "true",
 		JWTSecret:       getenv("JWT_SECRET", defaultJWTSecret),
 		AccessTTL:       parseDuration("ACCESS_TOKEN_TTL", 30*time.Minute),
 		RefreshTTL:      parseDuration("REFRESH_TOKEN_TTL", 30*24*time.Hour),
