@@ -38,3 +38,25 @@ jobs:
         run: pnpm --filter web lint
       - name: Build (tsc + vite)
         run: pnpm --filter web build
+
+  # 验证两个生产 Dockerfile 能构建（不推送；deploy 等服务器就位后加）
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build api image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          file: apps/api/Dockerfile
+          push: false
+      - name: Build web+nginx image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/nginx/Dockerfile
+          push: false
+          build-args: |
+            VITE_AMAP_KEY=${{ vars.VITE_AMAP_KEY }}
+            VITE_AMAP_SECURITY_CODE=${{ secrets.VITE_AMAP_SECURITY_CODE }}
