@@ -66,13 +66,13 @@ services:
       - key: CORS_ORIGINS
         sync: false
 
-  # 前端静态站（Render 免费静态托管 + 自动 HTTPS；static 类型不支持 region 字段）
+  # 前端静态站（Render 免费静态托管 + 自动 HTTPS）
+  # static 类型：不支持 region、也没有 plan 字段（静态站本就免费）
   - type: web
     name: tripweave-web
     runtime: static
     buildCommand: corepack enable && corepack prepare pnpm@11.4.0 --activate && pnpm install --frozen-lockfile && pnpm --filter web build
     staticPublishPath: apps/web/dist
-    plan: free
     routes:
       # SPA history 路由：全部回退到 index.html
       - type: rewrite
