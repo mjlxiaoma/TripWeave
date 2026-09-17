@@ -8,7 +8,13 @@ import (
 	"net"
 	"net/smtp"
 	"strings"
+	"time"
 )
+
+// dialTimeout bounds the SMTP dial. Cross-border routes (e.g. an overseas
+// datacenter reaching smtp.qq.com) can silently blackhole the connection;
+// without a timeout the caller hangs for minutes.
+const dialTimeout = 10 * time.Second
 
 // Sender delivers email via a configured SMTP server.
 type Sender struct {
@@ -69,7 +75,8 @@ func (s *Sender) Send(to, subject, textBody, htmlBody string) error {
 
 	if s.port == "465" {
 		// 隐式 TLS（QQ/163 邮箱 465 端口）
-		conn, err := tls.Dial("tcp", addr, &tls.Config{ServerName: s.host, MinVersion: tls.VersionTLS12})
+		d := &net.Dialer{Timeout: dialTimeout}
+		conn, err := tls.DialWithDialer(d, "tcp", addr, &tls.Config{ServerName: s.host, MinVersion: tls.VersionTLS12})
 		if err != nil {
 			return fmt.Errorf("smtp tls dial: %w", err)
 		}
@@ -85,9 +92,13 @@ func (s *Sender) Send(to, subject, textBody, htmlBody string) error {
 	}
 
 	// 25/587: 明文连接后 STARTTLS
-	c, err := smtp.Dial(addr)
+	conn, err := net.DialTimeout("tcp", addr, dialTimeout)
 	if err != nil {
 		return fmt.Errorf("smtp dial: %w", err)
+	}
+	c, err := smtp.NewClient(conn, s.host)
+	if err != nil {
+		return fmt.Errorf("smtp client: %w", err)
 	}
 	defer c.Close()
 	if ok, _ := c.Extension("STARTTLS"); ok {

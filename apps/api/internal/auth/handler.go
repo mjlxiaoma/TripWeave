@@ -146,9 +146,14 @@ func (h *Handler) sendCode(r *http.Request, email string) (bool, error) {
   <p style="color:#64748b;font-size:13px">15 分钟内有效 · Expires in 15 minutes</p>
   <p style="color:#94a3b8;font-size:12px;margin-top:24px">如果这不是你的操作，请忽略本邮件。/ If you did not request this, please ignore this email.</p>
 </div>`, code)
-	if err := h.mailer.Send(email, subject, text, html); err != nil {
-		return false, fmt.Errorf("send verification email: %w", err)
-	}
+	// 后台异步发送：跨境 SMTP（海外机房→QQ 邮箱）可能慢甚至超时被拒，
+	// 同步等待会卡住注册响应。发件失败只记日志并把验证码记为兜底。
+	go func() {
+		if err := h.mailer.Send(email, subject, text, html); err != nil {
+			slog.Error("verification email send failed (code logged as fallback)",
+				"email", email, "code", code, "error", err)
+		}
+	}()
 	return true, nil
 }
 
