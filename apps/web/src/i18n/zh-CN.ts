@@ -95,6 +95,7 @@ export default {
       weekend: '周末从泉州出发逛吃，3天，节奏慢一点',
       drive: '自驾川西小环线，4天，每天开车不超过4小时',
     },
+    aiBadge: 'AI 推荐',
   },
   trips: {
     title: '我的旅行',

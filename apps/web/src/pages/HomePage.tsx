@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../features/auth/AuthProvider'
-import { tripsApi } from '../services/api'
+import { api, tripsApi } from '../services/api'
 import { DRAFT_NL_KEY } from '../utils/draftNl'
 
 type SpeechAlt = { transcript: string }
@@ -23,7 +23,12 @@ type SpeechWindow = Window & {
 }
 
 const CHIP_KEYS = ['popular', 'niche', 'photo', 'weekend', 'drive'] as const
-type ChipKey = (typeof CHIP_KEYS)[number]
+
+// AI 生成的灵感标签（/inspiration 返回）；null = 未加载或失败（走静态兜底）
+interface AiChip {
+  label: string
+  sample: string
+}
 
 function SparkleIcon() {
   return (
@@ -58,16 +63,45 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [nl, setNl] = useState('')
-  const [activeChip, setActiveChip] = useState<ChipKey>('popular')
+  const [activeChip, setActiveChip] = useState(0)
   const [listening, setListening] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [aiChips, setAiChips] = useState<AiChip[] | null>(null)
+  const [chipsLoading, setChipsLoading] = useState(true)
 
   // 登录/注册回来自动恢复上次输入的草稿。
   useEffect(() => {
     const draft = sessionStorage.getItem(DRAFT_NL_KEY)
     if (draft) setNl(draft)
   }, [])
+
+  // 拉取 AI 生成的灵感标签；失败/为空则保持 null，渲染时走静态兜底。
+  useEffect(() => {
+    let cancelled = false
+    setChipsLoading(true)
+    api<{ chips: AiChip[]; source: string }>(`/inspiration?locale=${i18n.language}`)
+      .then((res) => {
+        if (!cancelled && res.chips.length > 0) setAiChips(res.chips)
+      })
+      .catch(() => {
+        /* 静默：AI 不可用时用静态标签兜底 */
+      })
+      .finally(() => {
+        if (!cancelled) setChipsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [i18n.language])
+
+  // 渲染用的标签：AI 的优先，否则静态兜底
+  const chips: AiChip[] =
+    aiChips ??
+    CHIP_KEYS.map((k) => ({
+      label: t('home.chips.' + k),
+      sample: t('home.chipSamples.' + k),
+    }))
 
   const speechSupported = useMemo(() => {
     if (typeof window === 'undefined') return false
@@ -174,27 +208,43 @@ export default function HomePage() {
         )}
 
         <div className="mt-20">
-          <p className="text-sm font-medium text-slate-500">{t('home.popularTitle')}</p>
+          <p className="flex items-center justify-center gap-2 text-sm font-medium text-slate-500">
+            {t('home.popularTitle')}
+            {aiChips && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-ai-100 px-2 py-0.5 text-[11px] font-semibold text-ai-700">
+                <SparkleIcon />
+                {t('home.aiBadge')}
+              </span>
+            )}
+          </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            {CHIP_KEYS.map((key) => {
-              const active = key === activeChip
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => {
-                    setActiveChip(key)
-                    setNl(t('home.chipSamples.' + key))
-                  }}
-                  className={(active
-                    ? 'bg-primary-600 text-white '
-                    : 'bg-white text-slate-600 hover:text-primary-700 ') +
-                    'rounded-full px-4 py-2 text-sm font-medium shadow-sm transition'}
-                >
-                  {t('home.chips.' + key)}
-                </button>
-              )
-            })}
+            {chipsLoading
+              ? // 骨架：5 个 pulse 圆块
+                Array.from({ length: 5 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="h-9 w-24 animate-pulse rounded-full bg-slate-200"
+                  />
+                ))
+              : chips.map((chip, idx) => {
+                  const active = idx === activeChip
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setActiveChip(idx)
+                        setNl(chip.sample)
+                      }}
+                      className={(active
+                        ? 'bg-primary-600 text-white '
+                        : 'bg-white text-slate-600 hover:text-primary-700 ') +
+                        'rounded-full px-4 py-2 text-sm font-medium shadow-sm transition'}
+                    >
+                      {chip.label}
+                    </button>
+                  )
+                })}
           </div>
         </div>
       </div>

@@ -18,6 +18,7 @@ import (
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/auth"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/config"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/day"
+	"github.com/mjlxiaoma/TripWeave/apps/api/internal/inspire"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/location"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/mail"
 	"github.com/mjlxiaoma/TripWeave/apps/api/internal/middleware"
@@ -113,6 +114,9 @@ func main() {
 
 	shareHandler := share.NewHandler(trips, days, locSvc)
 
+	// 首页灵感标签：AI 生成 + Redis 缓存（provider 为 nil 时返回空，前端走静态兜底）
+	inspireHandler := inspire.NewHandler(inspire.NewService(provider, rdb))
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recover(log))
@@ -168,6 +172,10 @@ func main() {
 		shareLimited := middleware.RateLimit(30.0/60.0, 20)
 		api.With(shareLimited).Get("/share/{token}", shareHandler.Trip)
 		api.With(shareLimited).Get("/share/{token}/days/{dayId}/route", shareHandler.Route)
+
+		// 首页灵感标签：公开 + 限流（缓存命中时零成本，未命中才打 LLM）
+		inspireLimited := middleware.RateLimit(30.0/60.0, 20)
+		api.With(inspireLimited).Get("/inspiration", inspireHandler.Chips)
 
 		// AI 端点按 IP 限流：LLM 调用成本高，约每 10s 一条消息
 		aiLimited := middleware.RateLimit(6.0/60.0, 3)

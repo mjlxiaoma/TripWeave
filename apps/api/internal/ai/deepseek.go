@@ -177,6 +177,122 @@ func isRetryable(err error) bool {
 	return errors.Is(err, ErrRateLimited) || errors.Is(err, ErrUnavailable)
 }
 
+// chatResponse is the non-streaming wire shape: the full message arrives in
+// one JSON body instead of SSE deltas.
+type chatResponse struct {
+	Choices []struct {
+		Message struct {
+			Content   string              `json:"content"`
+			ToolCalls []wireToolCallDelta `json:"tool_calls"`
+		} `json:"message"`
+		FinishReason *string `json:"finish_reason"`
+	} `json:"choices"`
+	Usage *Usage `json:"usage"`
+}
+
+// ChatOnce implements Provider: a single non-streaming completion, for short
+// structured outputs where incremental delivery has no value.
+func (d *DeepSeek) ChatOnce(ctx context.Context, req ChatRequest) (*ChatResult, error) {
+	attempts := 1 + d.MaxRetries
+	var lastErr error
+	for attempt := 0; attempt < attempts; attempt++ {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(time.Duration(attempt) * time.Second): // 1s, 2s backoff
+			}
+		}
+		res, err := d.once(ctx, req)
+		if err == nil {
+			return res, nil
+		}
+		lastErr = err
+		if !isRetryable(err) {
+			return nil, err
+		}
+	}
+	return nil, lastErr
+}
+
+func (d *DeepSeek) once(ctx context.Context, req ChatRequest) (*ChatResult, error) {
+	body := chatRequest{
+		Model:      d.Model,
+		Messages:   toWireMessages(req.Messages),
+		Tools:      toWireTools(req.Tools),
+		ToolChoice: req.ToolChoice,
+		Stream:     false,
+	}
+	if req.Temperature > 0 {
+		body.Temperature = &req.Temperature
+	}
+	if req.MaxTokens > 0 {
+		body.MaxTokens = req.MaxTokens
+	}
+	payload, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("marshal chat request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, d.BaseURL+"/chat/completions", bytes.NewReader(payload))
+	if err != nil {
+		return nil, fmt.Errorf("build request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+d.APIKey)
+
+	resp, err := d.HTTPClient.Do(httpReq)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, ErrTimeout
+		}
+		if errors.Is(err, context.Canceled) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return nil, ErrRateLimited
+	}
+	if resp.StatusCode >= 500 {
+		return nil, fmt.Errorf("%w: status %d", ErrUnavailable, resp.StatusCode)
+	}
+	if resp.StatusCode != http.StatusOK {
+		snippet, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return nil, fmt.Errorf("%w: status %d: %s", ErrInvalidResponse, resp.StatusCode, strings.TrimSpace(string(snippet)))
+	}
+
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return nil, fmt.Errorf("%w: read body: %v", ErrUnavailable, err)
+	}
+	var out chatResponse
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("%w: malformed response", ErrInvalidResponse)
+	}
+	result := &ChatResult{Usage: out.Usage}
+	if len(out.Choices) == 0 {
+		return nil, fmt.Errorf("%w: empty choices", ErrInvalidResponse)
+	}
+	result.Text = out.Choices[0].Message.Content
+	if out.Choices[0].FinishReason != nil {
+		result.FinishReason = *out.Choices[0].FinishReason
+	}
+	for _, tc := range out.Choices[0].Message.ToolCalls {
+		if tc.Function.Arguments == "" {
+			tc.Function.Arguments = "{}"
+		}
+		result.ToolCalls = append(result.ToolCalls, ToolCall{
+			ID:        tc.ID,
+			Name:      tc.Function.Name,
+			Arguments: json.RawMessage(tc.Function.Arguments),
+		})
+	}
+	return result, nil
+}
+
 func (d *DeepSeek) streamOnce(ctx context.Context, req ChatRequest, onChunk func(StreamChunk)) (*ChatResult, bool, error) {
 	body := chatRequest{
 		Model:      d.Model,

@@ -23,6 +23,11 @@ type fakeProvider struct {
 	calls   int
 }
 
+// ChatOnce satisfies ai.Provider (engine only exercises ChatStream).
+func (f *fakeProvider) ChatOnce(context.Context, ai.ChatRequest) (*ai.ChatResult, error) {
+	return &ai.ChatResult{}, nil
+}
+
 func (f *fakeProvider) ChatStream(ctx context.Context, req ai.ChatRequest, onChunk func(ai.StreamChunk)) (*ai.ChatResult, error) {
 	f.calls++
 	if f.calls-1 < len(f.results) {
@@ -279,6 +284,11 @@ func TestChatProviderError(t *testing.T) {
 }
 
 type errProvider struct{ err error }
+
+// ChatOnce satisfies ai.Provider (engine only exercises ChatStream).
+func (e *errProvider) ChatOnce(context.Context, ai.ChatRequest) (*ai.ChatResult, error) {
+	return nil, e.err
+}
 
 func (e *errProvider) ChatStream(ctx context.Context, req ai.ChatRequest, onChunk func(ai.StreamChunk)) (*ai.ChatResult, error) {
 	return nil, e.err

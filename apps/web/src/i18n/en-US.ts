@@ -95,6 +95,7 @@ export default {
       weekend: 'A slow food-and-wander weekend from Quanzhou, 3 days',
       drive: 'Self-drive western Sichuan loop, 4 days, under 4 hours of driving per day',
     },
+    aiBadge: 'AI picks',
   },
   trips: {
     title: 'My Trips',

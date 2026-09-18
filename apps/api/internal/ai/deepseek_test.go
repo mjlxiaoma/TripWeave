@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -225,5 +226,64 @@ func TestChatStreamContextCancel(t *testing.T) {
 	_, err := d.ChatStream(ctx, ChatRequest{Messages: []Message{{Role: RoleUser, Content: "hi"}}}, func(StreamChunk) {})
 	if err == nil {
 		t.Error("expected error on context timeout")
+	}
+}
+
+// --- ChatOnce (non-streaming) ---
+
+func TestChatOnceParsesSingleResponse(t *testing.T) {
+	var gotStream bool
+	d := newTestProvider(t, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Stream bool `json:"stream"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		gotStream = body.Stream
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"a\":1}"},"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":5}}`)
+	})
+	res, err := d.ChatOnce(context.Background(), ChatRequest{Messages: []Message{{Role: RoleUser, Content: "hi"}}})
+	if err != nil {
+		t.Fatalf("ChatOnce: %v", err)
+	}
+	if gotStream {
+		t.Error("ChatOnce must send stream:false")
+	}
+	if res.Text != `{"a":1}` {
+		t.Errorf("Text = %q", res.Text)
+	}
+	if res.FinishReason != "stop" {
+		t.Errorf("FinishReason = %q", res.FinishReason)
+	}
+	if res.Usage == nil || res.Usage.PromptTokens != 10 {
+		t.Errorf("Usage = %+v", res.Usage)
+	}
+}
+
+func TestChatOnceEmptyChoices(t *testing.T) {
+	d := newTestProvider(t, func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprint(w, `{"choices":[]}`)
+	})
+	_, err := d.ChatOnce(context.Background(), ChatRequest{Messages: []Message{{Role: RoleUser, Content: "hi"}}})
+	if !errors.Is(err, ErrInvalidResponse) {
+		t.Errorf("want ErrInvalidResponse, got %v", err)
+	}
+}
+
+func TestChatOnceRetriesOn429(t *testing.T) {
+	var calls atomic.Int32
+	d := newTestProvider(t, func(w http.ResponseWriter, _ *http.Request) {
+		if calls.Add(1) == 1 {
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		fmt.Fprint(w, `{"choices":[{"message":{"content":"ok"},"finish_reason":"stop"}]}`)
+	})
+	res, err := d.ChatOnce(context.Background(), ChatRequest{Messages: []Message{{Role: RoleUser, Content: "hi"}}})
+	if err != nil {
+		t.Fatalf("ChatOnce: %v", err)
+	}
+	if res.Text != "ok" || calls.Load() != 2 {
+		t.Errorf("text=%q calls=%d", res.Text, calls.Load())
 	}
 }

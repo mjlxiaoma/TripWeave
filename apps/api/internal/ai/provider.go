@@ -76,4 +76,7 @@ type ChatResult struct {
 // it after returning.
 type Provider interface {
 	ChatStream(ctx context.Context, req ChatRequest, onChunk func(StreamChunk)) (*ChatResult, error)
+	// ChatOnce is the non-streaming counterpart for short structured outputs
+	// (JSON etc.): one request, one complete response, no incremental chunks.
+	ChatOnce(ctx context.Context, req ChatRequest) (*ChatResult, error)
 }
