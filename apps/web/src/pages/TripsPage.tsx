@@ -1,7 +1,8 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { tripsApi } from '../services/api'
+import TripEditDialog from '../features/trips/TripEditDialog'
 import type { Trip, TripStatus } from '../types'
 
 type TabKey = 'all' | 'active' | 'planning' | 'done'
@@ -19,6 +20,15 @@ const STATUS_BADGE: Record<TripStatus, string> = {
   planning: 'bg-violet-100 text-violet-600',
   ready: 'bg-emerald-100 text-emerald-700',
   archived: 'bg-slate-200/90 text-slate-600',
+}
+
+// 状态流转：点击徽标切到下一个状态（draft 与 planning 在 UI 上同属「规划中」，
+// 从 draft 起步先落到 planning，之后 ready → archived 单向流转，便于撤销误点时回退）
+const NEXT_STATUS: Record<TripStatus, TripStatus> = {
+  draft: 'planning',
+  planning: 'ready',
+  ready: 'archived',
+  archived: 'planning',
 }
 
 // 封面占位插画：按 trip id 哈希确定性取色，避免每次渲染跳变
@@ -137,6 +147,180 @@ function EmptyHint() {
   )
 }
 
+// 单个旅行卡片：承载 ⋯ 菜单（编辑/删除）、状态徽标切换、删除确认条
+function TripCard({
+  trip,
+  onOpen,
+  onEdit,
+  onStatusChange,
+  onDelete,
+}: {
+  trip: Trip
+  onOpen: () => void
+  onEdit: () => void
+  onStatusChange: (s: TripStatus) => void
+  onDelete: () => Promise<void>
+}) {
+  const { t } = useTranslation()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [delError, setDelError] = useState(false)
+  const [statusBusy, setStatusBusy] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [menuOpen])
+
+  const dateLabel = (trip: Trip): string => {
+    if (trip.start_date && trip.end_date) {
+      const s = new Date(`${trip.start_date}T00:00:00`)
+      const e = new Date(`${trip.end_date}T00:00:00`)
+      const days = Math.round((e.getTime() - s.getTime()) / 86400000) + 1
+      const sameYear = s.getFullYear() === e.getFullYear()
+      const range = `${fmtDate(trip.start_date, true)} – ${fmtDate(trip.end_date, !sameYear)}`
+      return Number.isFinite(days) && days > 0 ? `${range} · ${t('trips.days', { n: days })}` : range
+    }
+    if (trip.start_date) return fmtDate(trip.start_date, true)
+    if (trip.end_date) return fmtDate(trip.end_date, true)
+    return t('trips.noDates')
+  }
+
+  async function cycleStatus(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (statusBusy) return
+    setStatusBusy(true)
+    try {
+      await onStatusChange(NEXT_STATUS[trip.status])
+    } finally {
+      setStatusBusy(false)
+    }
+  }
+
+  async function confirmDelete() {
+    if (deleting) return
+    setDeleting(true)
+    setDelError(false)
+    try {
+      await onDelete()
+    } catch {
+      setDelError(true)
+      setDeleting(false)
+    }
+  }
+
+  if (confirming) {
+    return (
+      <div className="flex min-h-[17rem] flex-col justify-center gap-2.5 rounded-2xl bg-rose-50 p-5 shadow-sm">
+        <p className="flex items-center gap-2 text-sm font-semibold text-rose-700">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 shrink-0">
+            <path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {t('trips.del.confirm', { title: trip.title })}
+        </p>
+        <p className="text-xs text-rose-600/80">{t('trips.del.hint')}</p>
+        {delError && <p className="text-xs text-rose-700">{t('trips.del.error')}</p>}
+        <div className="mt-1 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => { setConfirming(false); setDelError(false) }}
+            className="rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+          >
+            {t('trips.del.cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmDelete()}
+            disabled={deleting}
+            className="rounded-lg bg-rose-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-rose-700 disabled:opacity-60"
+          >
+            {deleting ? t('trips.del.deleting') : t('trips.del.confirmBtn')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => { if (e.key === 'Enter') onOpen() }}
+      className="group cursor-pointer overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div className="relative">
+        <TripCover trip={trip} />
+        <button
+          type="button"
+          onClick={cycleStatus}
+          disabled={statusBusy}
+          title={t(`trips.status.${trip.status}`)}
+          className={`absolute left-4 top-4 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-opacity disabled:opacity-60 ${STATUS_BADGE[trip.status]}`}
+        >
+          {t(`trips.status.${trip.status}`)}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-3 w-3 opacity-70">
+            <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <div ref={menuRef} className="absolute right-3 top-3">
+          <button
+            type="button"
+            aria-label={t('trips.menu.edit')}
+            onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v) }}
+            className={`flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-sm transition-all hover:text-slate-800 ${
+              menuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+              <circle cx="5" cy="12" r="1.6" />
+              <circle cx="12" cy="12" r="1.6" />
+              <circle cx="19" cy="12" r="1.6" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-9 z-20 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit() }}
+                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+                  <path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t('trips.menu.edit')}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setConfirming(true) }}
+                className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-rose-600 transition-colors hover:bg-rose-50"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+                  <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t('trips.menu.delete')}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="p-5">
+        <h2 className="truncate text-lg font-semibold text-slate-900">{trip.title}</h2>
+        <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+          <CalendarIcon />
+          {dateLabel(trip)}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function TripsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -144,6 +328,7 @@ export default function TripsPage() {
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
   const [tab, setTab] = useState<TabKey>('all')
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -163,20 +348,6 @@ export default function TripsPage() {
 
   const filtered = useMemo(() => trips.filter((trip) => TAB_MATCH[tab](trip.status)), [trips, tab])
   const activeCount = useMemo(() => trips.filter((trip) => trip.status === 'ready').length, [trips])
-
-  const dateLabel = (trip: Trip): string => {
-    if (trip.start_date && trip.end_date) {
-      const s = new Date(`${trip.start_date}T00:00:00`)
-      const e = new Date(`${trip.end_date}T00:00:00`)
-      const days = Math.round((e.getTime() - s.getTime()) / 86400000) + 1
-      const sameYear = s.getFullYear() === e.getFullYear()
-      const range = `${fmtDate(trip.start_date, true)} – ${fmtDate(trip.end_date, !sameYear)}`
-      return Number.isFinite(days) && days > 0 ? `${range} · ${t('trips.days', { n: days })}` : range
-    }
-    if (trip.start_date) return fmtDate(trip.start_date, true)
-    if (trip.end_date) return fmtDate(trip.end_date, true)
-    return t('trips.noDates')
-  }
 
   return (
     <div className="bg-slate-100/70 px-6 pb-24 pt-12">
@@ -247,33 +418,35 @@ export default function TripsPage() {
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((trip) => (
-              <button
+              <TripCard
                 key={trip.id}
-                type="button"
-                onClick={() => navigate(`/trip/${trip.id}`)}
-                className="group overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="relative">
-                  <TripCover trip={trip} />
-                  <span
-                    className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-medium ${STATUS_BADGE[trip.status]}`}
-                  >
-                    {t(`trips.status.${trip.status}`)}
-                  </span>
-                </div>
-                <div className="p-5">
-                  <h2 className="truncate text-lg font-semibold text-slate-900">{trip.title}</h2>
-                  <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
-                    <CalendarIcon />
-                    {dateLabel(trip)}
-                  </p>
-                </div>
-              </button>
+                trip={trip}
+                onOpen={() => navigate(`/trip/${trip.id}`)}
+                onEdit={() => setEditingTrip(trip)}
+                onStatusChange={async (status) => {
+                  const updated = await tripsApi.update(trip.id, { status })
+                  setTrips((prev) => prev.map((x) => (x.id === trip.id ? { ...x, ...updated } : x)))
+                }}
+                onDelete={async () => {
+                  await tripsApi.remove(trip.id)
+                  setTrips((prev) => prev.filter((x) => x.id !== trip.id))
+                }}
+              />
             ))}
             <div className="flex min-h-[17rem] flex-col items-center justify-center gap-3 rounded-2xl bg-white p-6 text-center shadow-sm">
               <EmptyHint />
             </div>
           </div>
+        )}
+        {editingTrip && (
+          <TripEditDialog
+            trip={editingTrip}
+            onClose={() => setEditingTrip(null)}
+            onSaved={(updated) => {
+              setTrips((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)))
+              setEditingTrip(null)
+            }}
+          />
         )}
       </div>
     </div>

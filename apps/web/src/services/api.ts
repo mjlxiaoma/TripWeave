@@ -136,5 +136,9 @@ export const tripsApi = {
   get: (id: string) => api<Trip>('/trips/' + id),
   create: (payload: CreateTripPayload) =>
     api<Trip>('/trips', { method: 'POST', body: JSON.stringify(payload) }),
+  update: (id: string, patch: CreateTripPayload) =>
+    api<Trip>('/trips/' + id, { method: 'PATCH', body: JSON.stringify(patch) }),
+  remove: (id: string) =>
+    api<{ deleted: boolean }>('/trips/' + id, { method: 'DELETE' }),
   getDays: (id: string) => api<Day[]>('/trips/' + id + '/days'),
 }
