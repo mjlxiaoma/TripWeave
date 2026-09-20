@@ -4,6 +4,7 @@ package location
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"unicode/utf8"
@@ -57,6 +58,8 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	}
 	locs, err := h.svc.Search(r.Context(), q, city)
 	if err != nil {
+		// 上游错误(限流/配额/网络)打日志,否则 502 在前端不可诊断
+		slog.Warn("location search failed", "q", q, "city", city, "err", err)
 		failMap(w, err, "location search failed")
 		return
 	}
@@ -108,6 +111,7 @@ func (h *Handler) DayRoute(w http.ResponseWriter, r *http.Request) {
 	}
 	route, err := h.svc.RouteForDay(r.Context(), dayID, pts, mode)
 	if err != nil {
+		slog.Warn("day route failed", "day", dayID, "mode", mode, "err", err)
 		failMap(w, err, "day route failed")
 		return
 	}

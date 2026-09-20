@@ -215,6 +215,10 @@ interface Props {
   onRefetch: () => void
   /** 只读模式（公开分享页）：无拖拽、无编辑/删除/新增 */
   readonly?: boolean
+  /** 当前选中的 Day（规划器标签页模式）；null 时回退第一天 */
+  activeDayId?: string | null
+  /** 切换 Day 标签时回调，用于地图联动 */
+  onSelectDay?: (dayId: string) => void
 }
 
 export default function DayTimeline({
@@ -227,6 +231,8 @@ export default function DayTimeline({
   onDaysChange,
   onRefetch,
   readonly,
+  activeDayId,
+  onSelectDay,
 }: Props) {
   const { t } = useTranslation()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -268,6 +274,7 @@ export default function DayTimeline({
     try {
       const day = await plannerApi.createDay(tripId, {})
       onDaysChange([...days, day])
+      onSelectDay?.(day.id) // 新建后直接切到该天
     } catch {
       onRefetch()
     }
@@ -285,7 +292,7 @@ export default function DayTimeline({
 
   if (days.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
+      <div className="m-3 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
         {generating ? (
           <>
             <span className="mb-3 inline-block h-7 w-7 animate-spin rounded-full border-2 border-ai-600 border-t-transparent" />
@@ -338,95 +345,128 @@ export default function DayTimeline({
     )
   }
 
+  // 编辑模式（规划器）：Day 标签页 + 单日时间轴。面板自身占满父容器高度，
+  // 滚动只发生在时间轴区域，页面级不滚动（三栏工作区布局）。
+  const activeDay = days.find((d) => d.id === activeDayId) ?? days[0]
+  const activeIdx = days.findIndex((d) => d.id === activeDay.id)
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="space-y-5">
-        {days.map((day, idx) => (
-          <section key={day.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="group flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
-                {idx + 1}
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-900">
-                  {t('planner.dayLabel', { n: idx + 1 })}
-                  {day.title ? ` · ${day.title}` : ''}
-                </p>
-                {day.date && <p className="text-xs text-slate-500">{day.date}</p>}
-              </div>
+      <div className="flex h-full min-h-0 flex-col">
+        {/* 面板头 */}
+        <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
+          <h2 className="text-sm font-semibold text-slate-900">{t('planner.itineraryTitle')}</h2>
+          <span className="text-[11px] text-slate-400">{t('planner.daysTotal', { count: days.length })}</span>
+        </div>
+
+        {/* Day 标签（横向滚动）+ 添加一天 */}
+        <div className="flex items-center gap-2 overflow-x-auto px-4 pb-3">
+          {days.map((d, idx) => {
+            const active = d.id === activeDay.id
+            return (
               <button
+                key={d.id}
                 type="button"
-                onClick={() => deleteDay(day.id)}
-                title={t('planner.deleteDay')}
-                className="rounded-md p-1.5 text-slate-400 opacity-0 transition-opacity hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100"
+                onClick={() => onSelectDay?.(d.id)}
+                className={`flex shrink-0 flex-col items-center rounded-xl px-3 py-1.5 transition-colors ${
+                  active
+                    ? 'bg-primary-600 text-white'
+                    : 'border border-slate-200 bg-white text-slate-700 hover:border-primary-300'
+                }`}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
-                  <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <span className="text-xs font-semibold">{t('planner.dayLabel', { n: idx + 1 })}</span>
+                {d.date && (
+                  <span className={`text-[10px] ${active ? 'text-white/70' : 'text-slate-400'}`}>
+                    {d.date.slice(5)}
+                  </span>
+                )}
               </button>
+            )
+          })}
+          <button
+            type="button"
+            onClick={addDay}
+            title={t('planner.addDay')}
+            className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-xl border border-dashed border-slate-300 text-slate-400 transition-colors hover:border-primary-400 hover:text-primary-600"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 单日时间轴（独立滚动区） */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+          <div className="group mb-2 flex items-center gap-2 px-1">
+            <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-500">
+              {t('planner.dayLabel', { n: activeIdx + 1 })}
+              {activeDay.title ? ` · ${activeDay.title}` : ''}
+              {activeDay.date ? <span className="text-slate-400"> · {activeDay.date}</span> : null}
+            </p>
+            <button
+              type="button"
+              onClick={() => deleteDay(activeDay.id)}
+              title={t('planner.deleteDay')}
+              className="rounded-md p-1 text-slate-400 opacity-0 transition-opacity hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+                <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+
+          <SortableContext items={activeDay.activities.map((a) => a.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {activeDay.activities.length === 0 && addingForDay !== activeDay.id ? (
+                <p className="px-2 py-3 text-center text-xs text-slate-400">{t('planner.noActivities')}</p>
+              ) : (
+                activeDay.activities.map((a) =>
+                  editingId === a.id ? (
+                    <ActivityEditor
+                      key={a.id}
+                      dayId={activeDay.id}
+                      destination={destination}
+                      activity={a}
+                      onSaved={() => { setEditingId(null); onRefetch() }}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  ) : (
+                    <SortableCard key={a.id} id={a.id}>
+                      {(handleProps) => (
+                        <ActivityCard
+                          activity={a}
+                          selected={a.id === selectedActivityId}
+                          onSelect={onSelectActivity}
+                          onEdit={() => setEditingId(a.id)}
+                          onDelete={() => deleteActivity(activeDay.id, a.id)}
+                          handleProps={handleProps}
+                        />
+                      )}
+                    </SortableCard>
+                  ),
+                )
+              )}
+
+              {/* 添加活动 */}
+              {addingForDay === activeDay.id ? (
+                <ActivityEditor
+                  dayId={activeDay.id}
+                  destination={destination}
+                  onSaved={() => { setAddingForDay(null); onRefetch() }}
+                  onCancel={() => setAddingForDay(null)}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAddingForDay(activeDay.id)}
+                  className="w-full rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-primary-400 hover:text-primary-600"
+                >
+                  + {t('planner.addActivity')}
+                </button>
+              )}
             </div>
-
-            <SortableContext items={day.activities.map((a) => a.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2 p-3">
-                {day.activities.length === 0 && addingForDay !== day.id ? (
-                  <p className="px-2 py-3 text-center text-xs text-slate-400">{t('planner.noActivities')}</p>
-                ) : (
-                  day.activities.map((a) =>
-                    editingId === a.id ? (
-                      <ActivityEditor
-                        key={a.id}
-                        dayId={day.id}
-                        destination={destination}
-                        activity={a}
-                        onSaved={() => { setEditingId(null); onRefetch() }}
-                        onCancel={() => setEditingId(null)}
-                      />
-                    ) : (
-                      <SortableCard key={a.id} id={a.id}>
-                        {(handleProps) => (
-                          <ActivityCard
-                            activity={a}
-                            selected={a.id === selectedActivityId}
-                            onSelect={onSelectActivity}
-                            onEdit={() => setEditingId(a.id)}
-                            onDelete={() => deleteActivity(day.id, a.id)}
-                            handleProps={handleProps}
-                          />
-                        )}
-                      </SortableCard>
-                    ),
-                  )
-                )}
-
-                {/* 添加活动 */}
-                {addingForDay === day.id ? (
-                  <ActivityEditor
-                    dayId={day.id}
-                    destination={destination}
-                    onSaved={() => { setAddingForDay(null); onRefetch() }}
-                    onCancel={() => setAddingForDay(null)}
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setAddingForDay(day.id)}
-                    className="w-full rounded-xl border border-dashed border-slate-300 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-primary-400 hover:text-primary-600"
-                  >
-                    + {t('planner.addActivity')}
-                  </button>
-                )}
-              </div>
-            </SortableContext>
-          </section>
-        ))}
-
-        <button
-          type="button"
-          onClick={addDay}
-          className="w-full rounded-2xl border border-dashed border-slate-300 bg-white/60 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-primary-400 hover:text-primary-600"
-        >
-          + {t('planner.addDay')}
-        </button>
+          </SortableContext>
+        </div>
       </div>
     </DndContext>
   )

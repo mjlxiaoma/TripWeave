@@ -42,8 +42,8 @@ export default function TripHeader({ trip, onBack }: Props) {
   const [shareOpen, setShareOpen] = useState(false)
   const traveling = isTraveling(trip)
   return (
-    <header className="sticky top-16 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+    <header className="shrink-0 border-b border-slate-200 bg-white">
+      <div className="flex w-full items-center gap-3 px-4 py-3">
         <button
           type="button"
           onClick={onBack}
@@ -55,7 +55,16 @@ export default function TripHeader({ trip, onBack }: Props) {
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-base font-semibold text-slate-900">{trip.title}</h1>
           <p className="text-xs text-slate-500">
-            {[trip.destination, formatRange(trip)].filter(Boolean).join(' · ')}
+            {[
+              trip.destination,
+              formatRange(trip),
+              trip.travelers_count ? t('planner.metaTravelers', { count: trip.travelers_count }) : null,
+              trip.preference?.budget != null
+                ? t('planner.metaBudget', { amount: trip.preference.budget.toLocaleString() })
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           </p>
         </div>
         <Link

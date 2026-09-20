@@ -36,7 +36,7 @@ export default function AiComposer({ streaming, onSend, onStop }: Props) {
 
   return (
     <div className="border-t border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-end gap-3 px-4 py-4">
+      <div className="flex items-end gap-3 px-4 py-4">
         <textarea
           rows={1}
           value={text}
@@ -49,7 +49,7 @@ export default function AiComposer({ streaming, onSend, onStop }: Props) {
             }
           }}
           placeholder={t('ai.composerPlaceholder')}
-          className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-ai-500 focus:outline-none focus:ring-2 focus:ring-ai-500/20 disabled:opacity-60"
+          className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-ai-500 focus:outline-none focus:ring-2 focus:ring-ai-500/20 disabled:opacity-60 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         />
         {streaming ? (
           <button

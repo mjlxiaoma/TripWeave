@@ -34,14 +34,15 @@ export default function AiMessageList({ messages, streaming }: Props) {
 
   if (messages.length === 0 && !streaming) {
     return (
-      <div className="flex flex-1 items-center justify-center px-6 py-12 text-center">
+      <div className="px-6 py-12 text-center">
         <p className="text-sm text-slate-400">{t('ai.emptyHint')}</p>
       </div>
     )
   }
 
+  // 滚动由父级面板容器承担，消息流自身只负责排列
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
+    <div className="space-y-4 px-4 py-4">
       {messages.map((m) =>
         m.role === 'user' ? (
           <div key={m.id} className="flex justify-end">

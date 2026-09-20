@@ -35,13 +35,21 @@ export default function PlannerPage() {
     setSelectedActivityId((prev) => (prev === activityId ? null : activityId))
   }, [])
 
-  // 地图 marker 点击 → 高亮时间轴卡片并滚入视野
-  const handleMapSelectActivity = useCallback((activityId: string) => {
-    setSelectedActivityId(activityId)
-    document
-      .getElementById(`activity-${activityId}`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [])
+  // 地图 marker 点击 → 切到该活动所在的 Day、高亮时间轴卡片并滚入视野
+  const handleMapSelectActivity = useCallback(
+    (activityId: string) => {
+      const day = days.find((d) => d.activities.some((a) => a.id === activityId))
+      if (day && day.id !== selectedDayId) setSelectedDayId(day.id)
+      setSelectedActivityId(activityId)
+      // 等切 Day 后的时间轴渲染完成再滚动
+      window.setTimeout(() => {
+        document
+          .getElementById(`activity-${activityId}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 60)
+    },
+    [days, selectedDayId],
+  )
 
   // 后端自动定位是后台串行任务(节流+重试,数秒),AI 回合结束时的那次 refresh
   // 拿到的常是「尚未定位」的快照。这里做有限轮询补齐坐标,避免地图停在
@@ -147,13 +155,15 @@ export default function PlannerPage() {
 
   const generating = state.streaming && days.length === 0
 
+  // 三栏工作区：lg 下页面锁定视口高度、不滚动，滚动只发生在三个面板内部；
+  // 小屏回退为纵向堆叠 + 页面滚动。
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
       <TripHeader trip={trip} onBack={() => navigate('/trips')} />
 
-      <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-3">
-        {/* 左:时间轴(占 2/3) */}
-        <div className="lg:col-span-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 lg:flex-row">
+        {/* 左栏:行程面板(Day 标签 + 时间轴,独立滚动) */}
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:w-[420px] lg:shrink-0">
           <DayTimeline
             tripId={tripId}
             days={days}
@@ -163,68 +173,56 @@ export default function PlannerPage() {
             onSelectActivity={selectActivity}
             onDaysChange={setDays}
             onRefetch={refreshDays}
+            activeDayId={selectedDayId}
+            onSelectDay={setSelectedDayId}
           />
-        </div>
+        </section>
 
-        {/* 右:地图 + AI 摘要 + 上下文 */}
-        <aside className="space-y-4 lg:col-span-1">
-          <div className="lg:sticky lg:top-4">
-            <MapPanel
-              destination={trip.destination}
-              days={days}
-              selectedDayId={selectedDayId}
-              onSelectDay={setSelectedDayId}
-              selectedActivityId={selectedActivityId}
-              onSelectActivity={handleMapSelectActivity}
-            />
+        {/* 中栏:地图(始终填满,摘要浮层在图内) */}
+        <section className="h-[340px] shrink-0 lg:h-auto lg:min-h-0 lg:flex-1">
+          <MapPanel
+            destination={trip.destination}
+            days={days}
+            selectedDayId={selectedDayId}
+            onSelectDay={setSelectedDayId}
+            selectedActivityId={selectedActivityId}
+            onSelectActivity={handleMapSelectActivity}
+            hideDayTabs
+            fillHeight
+          />
+        </section>
+
+        {/* 右栏:AI 助手面板(面板头固定 / 消息流滚动 / 输入框固定底部) */}
+        <aside className="flex h-[440px] shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-auto lg:min-h-0 lg:w-[400px]">
+          <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 px-4 py-3">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-ai-600">
+              <path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6-5.6-1.9 5.6-1.9L12 2.5z" />
+            </svg>
+            <h2 className="text-sm font-semibold text-slate-900">{t('ai.panelTitle')}</h2>
+            <span className="ml-auto rounded-full bg-ai-50 px-2.5 py-0.5 text-[11px] font-medium text-ai-700">
+              {state.streaming
+                ? t('ai.statusWorking')
+                : days.length > 0
+                  ? t('ai.statusReady')
+                  : t('ai.statusIdle')}
+            </span>
           </div>
-          <SummaryCard lines={state.summaryLines} changes={state.summary} />
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-sm font-semibold text-slate-900">{t('planner.contextTitle')}</h3>
-            <dl className="space-y-2 text-xs text-slate-600">
-              {trip.destination && (
-                <div className="flex justify-between">
-                  <dt className="text-slate-400">{t('planner.destination')}</dt>
-                  <dd className="font-medium">{trip.destination}</dd>
-                </div>
-              )}
-              {trip.travelers_count != null && (
-                <div className="flex justify-between">
-                  <dt className="text-slate-400">{t('planner.travelers')}</dt>
-                  <dd className="font-medium">{trip.travelers_count}</dd>
-                </div>
-              )}
-              {trip.preference?.budget != null && (
-                <div className="flex justify-between">
-                  <dt className="text-slate-400">{t('planner.budget')}</dt>
-                  <dd className="font-medium">¥{trip.preference.budget.toLocaleString()}</dd>
-                </div>
-              )}
-            </dl>
-            {trip.preference?.preferences && trip.preference.preferences.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {trip.preference.preferences.map((p) => (
-                  <span key={p} className="rounded-full bg-primary-50 px-2.5 py-0.5 text-[11px] font-medium text-primary-700">
-                    {t(`wizard.prefTags.${p}`, { defaultValue: p })}
-                  </span>
-                ))}
-              </div>
-            )}
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <AiMessageList messages={state.messages} streaming={state.streaming} />
+            {/* 变更摘要卡内嵌在对话流末尾,随消息上下文滚动 */}
+            <div className="px-4 pb-4">
+              <SummaryCard lines={state.summaryLines} changes={state.summary} />
+            </div>
+          </div>
+
+          {state.error && (
+            <p className="mx-4 mb-2 shrink-0 rounded-xl bg-rose-50 px-4 py-2 text-xs text-rose-700">{state.error}</p>
+          )}
+          <div className="shrink-0">
+            <AiComposer streaming={state.streaming} onSend={sendMessage} onStop={stop} />
           </div>
         </aside>
-      </div>
-
-      {/* 底部:对话区 */}
-      <div className="sticky bottom-0 border-t border-slate-200 bg-slate-50/95 backdrop-blur">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-h-64 overflow-y-auto">
-            <AiMessageList messages={state.messages} streaming={state.streaming} />
-          </div>
-          {state.error && (
-            <p className="mx-4 mb-2 rounded-xl bg-rose-50 px-4 py-2 text-xs text-rose-700">{state.error}</p>
-          )}
-          <AiComposer streaming={state.streaming} onSend={sendMessage} onStop={stop} />
-        </div>
       </div>
     </div>
   )

@@ -30,6 +30,10 @@ interface Props {
   onSelectActivity: (activityId: string) => void
   /** 公开分享模式：fallback 搜索与路线都走无需登录的分享端点 */
   publicToken?: string
+  /** 隐藏内部 Day 标签（规划器左栏已有 Day 标签时传 true） */
+  hideDayTabs?: boolean
+  /** 填满父容器高度（规划器中栏）；默认固定 h-72（分享页） */
+  fillHeight?: boolean
 }
 
 function fmtDistance(m: number): string {
@@ -75,6 +79,8 @@ export default function MapPanel({
   selectedActivityId,
   onSelectActivity,
   publicToken,
+  hideDayTabs,
+  fillHeight,
 }: Props) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -185,24 +191,28 @@ export default function MapPanel({
 
     if (pending.length === 0) return
     let cancelled = false
-    Promise.all(
-      pending.map((a) =>
-        mapApi
-          .searchLocations(a.title, city)
-          .then((locs) => ({ a, loc: locs[0] ?? null }))
-          .catch(() => ({ a, loc: null as Location | null })),
-      ),
-    ).then((results) => {
-      if (cancelled) return
-      const newExtra = [...extra]
-      for (const { a, loc } of results) {
-        cache.set(a.id, loc)
-        if (loc && accept(loc)) {
-          newExtra.push({ activity: a, lng: loc.longitude, lat: loc.latitude, precise: false })
+    // 串行 + 间隔发起：并发 burst 会与后端自动定位任务叠加，触发高德 QPS 限流
+    // (502 CUQPS)。请求失败不缓存 —— 缓存 null 会让该活动本轮永不再试，
+    // 而下一轮 days 刷新(pollLocate)会带来新的 effect 运行自然重试。
+    ;(async () => {
+      const found: PlacedPoint[] = []
+      for (const a of pending) {
+        if (cancelled) return
+        try {
+          const locs = await mapApi.searchLocations(a.title, city)
+          const loc = locs[0] ?? null
+          cache.set(a.id, loc)
+          if (loc && accept(loc)) {
+            found.push({ activity: a, lng: loc.longitude, lat: loc.latitude, precise: false })
+            setPoints([...precise, ...extra, ...found].sort(byOrder))
+          }
+        } catch {
+          /* 失败(限流/网络)留待下轮重试 */
         }
+        await new Promise((r) => setTimeout(r, 250))
       }
-      setPoints([...precise, ...newExtra].sort(byOrder))
-    })
+      if (!cancelled) setPoints([...precise, ...extra, ...found].sort(byOrder))
+    })()
     return () => {
       cancelled = true
     }
@@ -346,72 +356,95 @@ export default function MapPanel({
       </div>
     )
   }
-  if (days.length === 0) return null
+  // 注意：地图容器必须始终挂载（即使在「等待行程」空态），否则首趟渲染时
+  // init effect 因 containerRef 为空而放弃初始化；days 之后到达时 effect 不会
+  // 重跑，地图将永远空白直到刷新页面。空态以浮层形式盖在容器上。
+  const dayIdx = days.findIndex((d) => d.id === activeDay?.id)
+  const summaryText =
+    route && route.legs.length > 0
+      ? t('map.summary', {
+          distance: fmtDistance(route.total_distance_m),
+          duration: fmtDuration(route.total_duration_s),
+          mode: t(`map.mode.${mode}`),
+        })
+      : routeLoading
+        ? t('map.routeLoading')
+        : preciseCount < 2
+          ? t('map.tooFewPoints')
+          : t('map.noRoute')
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-      {/* Day tabs */}
-      <div className="mb-2 flex items-center gap-1.5 overflow-x-auto pb-0.5">
-        {days.map((d, idx) => {
-          const active = d.id === activeDay?.id
-          return (
-            <button
-              key={d.id}
-              type="button"
-              onClick={() => onSelectDay(d.id)}
-              className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                active
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {t('planner.dayLabel', { n: idx + 1 })}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* 模式切换 */}
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500">{t('map.title')}</span>
-        <div className="flex gap-1">
-          {(['driving', 'walking'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                mode === m
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              {t(`map.mode.${m}`)}
-            </button>
-          ))}
+    <div
+      className={`rounded-2xl border border-slate-200 bg-white p-3 shadow-sm ${
+        fillHeight ? 'flex h-full min-h-0 flex-col' : ''
+      }`}
+    >
+      {/* Day tabs（分享页用；规划器的 Day 标签在左栏行程面板） */}
+      {!hideDayTabs && days.length > 0 && (
+        <div className="mb-2 flex items-center gap-1.5 overflow-x-auto pb-0.5">
+          {days.map((d, idx) => {
+            const active = d.id === activeDay?.id
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => onSelectDay(d.id)}
+                className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {t('planner.dayLabel', { n: idx + 1 })}
+              </button>
+            )
+          })}
         </div>
-      </div>
+      )}
 
-      {/* 地图容器 */}
-      <div ref={containerRef} className="h-72 w-full overflow-hidden rounded-xl bg-slate-100" />
+      {/* 地图容器：路线摘要与模式切换浮层在图内 */}
+      <div
+        className={`relative w-full overflow-hidden rounded-xl bg-slate-100 ${
+          fillHeight ? 'min-h-0 flex-1' : 'h-72'
+        }`}
+      >
+        <div ref={containerRef} className="h-full w-full" />
 
-      {/* 汇总行 */}
-      <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-        <span>
-          {route && route.legs.length > 0
-            ? t('map.summary', {
-                distance: fmtDistance(route.total_distance_m),
-                duration: fmtDuration(route.total_duration_s),
-                mode: t(`map.mode.${mode}`),
-              })
-            : routeLoading
-              ? t('map.routeLoading')
-              : preciseCount < 2
-                ? t('map.tooFewPoints')
-                : t('map.noRoute')}
-        </span>
-        {points.some((p) => !p.precise) && (
-          <span className="text-[11px] text-amber-600">{t('map.hasApproximate')}</span>
+        {days.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 px-4 text-center text-xs text-slate-400">
+            {t('map.waiting')}
+          </div>
+        )}
+
+        {days.length > 0 && (
+          <div className="absolute left-3 top-3 max-w-[240px] rounded-xl border border-slate-200/70 bg-white/95 px-3 py-2 shadow-sm backdrop-blur">
+            <p className="text-xs font-semibold text-slate-900">
+              {t('map.routeTitle', { n: dayIdx + 1, count: points.length })}
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-500">{summaryText}</p>
+            <div className="mt-1.5 flex gap-1">
+              {(['driving', 'walking'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                    mode === m
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'text-slate-500 hover:bg-slate-100'
+                  }`}
+                >
+                  {t(`map.mode.${m}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {days.length > 0 && points.some((p) => !p.precise) && (
+          <span className="absolute right-3 top-3 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] text-amber-600 shadow-sm">
+            {t('map.hasApproximate')}
+          </span>
         )}
       </div>
     </div>
