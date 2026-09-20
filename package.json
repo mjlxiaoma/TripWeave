@@ -1,6 +1,7 @@
 {
   "name": "tripweave",
   "private": true,
+  "packageManager": "pnpm@11.4.0",
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "build:web": "pnpm --filter web build",
