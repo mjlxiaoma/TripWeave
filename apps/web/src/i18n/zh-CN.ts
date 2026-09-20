@@ -96,6 +96,8 @@ export default {
       drive: '自驾川西小环线，4天，每天开车不超过4小时',
     },
     aiBadge: 'AI 推荐',
+    destHint: '点任意目的地，一键生成完整行程',
+    destPrompt: '我想去{{name}}旅行，主题是{{theme}}。帮我规划行程。',
   },
   trips: {
     title: '我的旅行',

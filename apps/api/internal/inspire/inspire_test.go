@@ -125,3 +125,49 @@ func TestServiceBadOutputReturnsEmptyNotError(t *testing.T) {
 		t.Errorf("bad output should return empty, got %v", chips)
 	}
 }
+
+// --- parseDestinations ---
+
+func TestParseDestinationsClean(t *testing.T) {
+	raw := `[{"name":"九寨沟","blurb":"10月彩林巅峰期"},{"name":"毕棚沟","blurb":"雪山+红叶同屏"}]`
+	d := parseDestinations(raw)
+	if len(d) != 2 || d[0].Name != "九寨沟" {
+		t.Fatalf("got %v", d)
+	}
+}
+
+func TestParseDestinationsFence(t *testing.T) {
+	raw := "```json\n[{\"name\":\"A\",\"blurb\":\"a\"},{\"name\":\"B\",\"blurb\":\"b\"}]\n```"
+	if d := parseDestinations(raw); len(d) != 2 {
+		t.Fatalf("fence salvage failed: %v", d)
+	}
+}
+
+func TestParseDestinationsTooFew(t *testing.T) {
+	if d := parseDestinations(`[{"name":"A","blurb":"a"}]`); d != nil {
+		t.Errorf("fewer than 2 should be rejected, got %v", d)
+	}
+}
+
+// --- Destinations service ---
+
+func TestServiceDestinationsCachesByTheme(t *testing.T) {
+	p := &fakeProvider{text: `[{"name":"A","blurb":"a"},{"name":"B","blurb":"b"}]`}
+	svc := NewService(p, nil)
+	if _, err := svc.Destinations(context.Background(), "秋色徒步", "zh-CN"); err != nil {
+		t.Fatalf("Destinations: %v", err)
+	}
+	if _, err := svc.Destinations(context.Background(), "秋色徒步", "zh-CN"); err != nil {
+		t.Fatalf("Destinations: %v", err)
+	}
+	if p.calls != 1 {
+		t.Errorf("provider called %d times, want 1 (theme cache hit)", p.calls)
+	}
+	// 不同主题应重新生成
+	if _, err := svc.Destinations(context.Background(), "海岛避寒", "zh-CN"); err != nil {
+		t.Fatalf("Destinations: %v", err)
+	}
+	if p.calls != 2 {
+		t.Errorf("new theme should regenerate, calls = %d", p.calls)
+	}
+}

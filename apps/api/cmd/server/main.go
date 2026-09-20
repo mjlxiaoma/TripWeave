@@ -176,6 +176,7 @@ func main() {
 		// 首页灵感标签：公开 + 限流（缓存命中时零成本，未命中才打 LLM）
 		inspireLimited := middleware.RateLimit(30.0/60.0, 20)
 		api.With(inspireLimited).Get("/inspiration", inspireHandler.Chips)
+		api.With(inspireLimited).Get("/inspiration/theme", inspireHandler.Destinations)
 
 		// AI 端点按 IP 限流：LLM 调用成本高，约每 10s 一条消息
 		aiLimited := middleware.RateLimit(6.0/60.0, 3)

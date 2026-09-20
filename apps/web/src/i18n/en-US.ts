@@ -96,6 +96,8 @@ export default {
       drive: 'Self-drive western Sichuan loop, 4 days, under 4 hours of driving per day',
     },
     aiBadge: 'AI picks',
+    destHint: 'Pick a destination to generate the full itinerary',
+    destPrompt: 'I want to travel to {{name}} with the theme {{theme}}. Plan my itinerary.',
   },
   trips: {
     title: 'My Trips',

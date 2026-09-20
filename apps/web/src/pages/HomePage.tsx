@@ -30,6 +30,12 @@ interface AiChip {
   sample: string
 }
 
+// 主题目的地（/inspiration/theme 返回）
+interface Destination {
+  name: string
+  blurb: string
+}
+
 function SparkleIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -63,12 +69,15 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [nl, setNl] = useState('')
-  const [activeChip, setActiveChip] = useState(0)
   const [listening, setListening] = useState(false)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [aiChips, setAiChips] = useState<AiChip[] | null>(null)
   const [chipsLoading, setChipsLoading] = useState(true)
+  // 主题目的地清单：点标签后展开
+  const [activeTheme, setActiveTheme] = useState<string | null>(null)
+  const [dests, setDests] = useState<Destination[] | null>(null)
+  const [destsLoading, setDestsLoading] = useState(false)
 
   // 登录/注册回来自动恢复上次输入的草稿。
   useEffect(() => {
@@ -102,6 +111,55 @@ export default function HomePage() {
       label: t('home.chips.' + k),
       sample: t('home.chipSamples.' + k),
     }))
+
+  // 点标签：拉取该主题的目的地清单（再点同一标签收起）
+  function pickTheme(chip: AiChip) {
+    if (activeTheme === chip.label) {
+      setActiveTheme(null)
+      setDests(null)
+      return
+    }
+    setActiveTheme(chip.label)
+    setDests(null)
+    setDestsLoading(true)
+    api<{ destinations: Destination[]; source: string }>(
+      `/inspiration/theme?theme=${encodeURIComponent(chip.label)}&locale=${i18n.language}`,
+    )
+      .then((res) => {
+        setDests(res.destinations)
+      })
+      .catch(() => {
+        // 失败兜底：把该标签的 sample 填入输入框，保留旧交互
+        setActiveTheme(null)
+        setNl(chip.sample)
+      })
+      .finally(() => setDestsLoading(false))
+  }
+
+  // 点目的地：直接以「主题+目的地」创建新旅行，planner autostart 接管生成
+  async function createFromDest(d: Destination) {
+    const text = `${t('home.destPrompt', { theme: activeTheme, name: d.name })}`
+    if (!user) {
+      sessionStorage.setItem(DRAFT_NL_KEY, text)
+      navigate('/register')
+      return
+    }
+    setCreating(true)
+    setCreateError(null)
+    try {
+      const trip = await tripsApi.create({
+        title: d.name + '之旅',
+        destination: d.name,
+        status: 'planning',
+        natural_language: text,
+      })
+      sessionStorage.removeItem(DRAFT_NL_KEY)
+      navigate(`/trip/${trip.id}?autostart=1`, { replace: true })
+    } catch {
+      setCreateError(t('home.createFailed'))
+      setCreating(false)
+    }
+  }
 
   const speechSupported = useMemo(() => {
     if (typeof window === 'undefined') return false
@@ -227,15 +285,12 @@ export default function HomePage() {
                   />
                 ))
               : chips.map((chip, idx) => {
-                  const active = idx === activeChip
+                  const active = chip.label === activeTheme
                   return (
                     <button
                       key={idx}
                       type="button"
-                      onClick={() => {
-                        setActiveChip(idx)
-                        setNl(chip.sample)
-                      }}
+                      onClick={() => pickTheme(chip)}
                       className={(active
                         ? 'bg-primary-600 text-white '
                         : 'bg-white text-slate-600 hover:text-primary-700 ') +
@@ -246,6 +301,38 @@ export default function HomePage() {
                   )
                 })}
           </div>
+
+          {/* 主题目的地清单：点标签展开 */}
+          {activeTheme && (
+            <div className="mx-auto mt-5 max-w-2xl">
+              {destsLoading ? (
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-200" />
+                  ))}
+                </div>
+              ) : dests && dests.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {dests.map((d) => (
+                    <button
+                      key={d.name}
+                      type="button"
+                      onClick={() => void createFromDest(d)}
+                      disabled={creating}
+                      className="group rounded-xl border border-slate-200 bg-white p-3.5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md disabled:opacity-50"
+                    >
+                      <p className="flex items-center justify-between text-sm font-semibold text-slate-900">
+                        {d.name}
+                        <span className="text-primary-500 opacity-0 transition-opacity group-hover:opacity-100">→</span>
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">{d.blurb}</p>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <p className="mt-2.5 text-center text-[11px] text-slate-400">{t('home.destHint')}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
