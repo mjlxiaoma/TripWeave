@@ -15972,6 +15972,4582 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "zVktr",
+      "x": 22400,
+      "y": -48,
+      "name": "Label 重设计-05a",
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "qQgYu",
+          "name": "LabelMain",
+          "fill": "$ink",
+          "content": "重设计 05a · 日期待定 → 一键设置日期",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "pUlFW",
+          "name": "LabelSub",
+          "fill": "$faint",
+          "content": "卡片日期入口 + 快捷日期弹层 + 规划器子头部入口",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "raFjP",
+      "x": 22400,
+      "y": 0,
+      "name": "重设计 05a · 日期设置入口",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "#F1F4F8",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "p7iCXt",
+          "type": "ref",
+          "ref": "m5xEEq",
+          "name": "TopBar",
+          "width": "fill_container",
+          "height": 72
+        },
+        {
+          "type": "frame",
+          "id": "bC3kF",
+          "name": "PageBody",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 22,
+          "padding": [
+            32,
+            110,
+            0,
+            110
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "L7VB0",
+              "name": "PageHead",
+              "width": "fill_container",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ziBnZ",
+                  "name": "HeadLeft",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QtiYu",
+                      "name": "H1",
+                      "fill": "$ink",
+                      "content": "我的旅行",
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "dov8r",
+                      "name": "Sub",
+                      "fill": "$faint",
+                      "content": "共 4 段旅程，1 段正在进行中",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aYvuA",
+                  "name": "Sp",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "JJyS4",
+                  "name": "NewTripBtn",
+                  "fill": "$primary",
+                  "cornerRadius": 12,
+                  "gap": 7,
+                  "padding": [
+                    11,
+                    18
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "yPAbo",
+                      "name": "i",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "plus",
+                      "library": "lucide",
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gAAlw",
+                      "name": "t",
+                      "fill": "#FFFFFF",
+                      "content": "新建旅行",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "MX3C7",
+              "name": "Tabs",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MZmxZ",
+                  "name": "Tab 全部",
+                  "fill": "$primary",
+                  "cornerRadius": 999,
+                  "padding": [
+                    8,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GohZP",
+                      "name": "t",
+                      "fill": "#FFFFFF",
+                      "content": "全部",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GQcDG",
+                  "name": "Tab 进行中",
+                  "fill": "$surface",
+                  "cornerRadius": 999,
+                  "padding": [
+                    8,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sTFvy",
+                      "name": "t",
+                      "fill": "$sub",
+                      "content": "进行中",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CqByF",
+                  "name": "Tab 规划中",
+                  "fill": "$surface",
+                  "cornerRadius": 999,
+                  "padding": [
+                    8,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fySCP",
+                      "name": "t",
+                      "fill": "$sub",
+                      "content": "规划中",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ehjoI",
+                  "name": "Tab 已完成",
+                  "fill": "$surface",
+                  "cornerRadius": 999,
+                  "padding": [
+                    8,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sVMAa",
+                      "name": "t",
+                      "fill": "$sub",
+                      "content": "已完成",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GjLP1",
+              "name": "CardGrid",
+              "width": "fill_container",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "AZ79R",
+                  "name": "Card 武功山 · 待设置",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0F172A0F",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 8
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "OggST",
+                      "name": "Cover",
+                      "width": "fill_container",
+                      "height": 150,
+                      "fill": "#3F4C63",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "ltUwT",
+                          "x": 258,
+                          "y": 26,
+                          "name": "Sun",
+                          "opacity": 0.35,
+                          "fill": "#FFFFFF",
+                          "width": 42,
+                          "height": 42
+                        },
+                        {
+                          "type": "path",
+                          "id": "M9cMkY",
+                          "x": 0,
+                          "y": 66,
+                          "name": "HB",
+                          "opacity": 0.5,
+                          "geometry": "M0 66l86-48 64 38 90-48 150 56v20h-390z",
+                          "viewBox": [
+                            0,
+                            0,
+                            390,
+                            84
+                          ],
+                          "fill": "#5B6B86",
+                          "width": 390,
+                          "height": 84
+                        },
+                        {
+                          "type": "path",
+                          "id": "Asjcw",
+                          "x": 0,
+                          "y": 98,
+                          "name": "HF",
+                          "opacity": 0.8,
+                          "geometry": "M0 52v-30l110-22 105 36 95-30 80 24v22z",
+                          "viewBox": [
+                            0,
+                            0,
+                            390,
+                            52
+                          ],
+                          "fill": "#2A3245",
+                          "width": 390,
+                          "height": 52
+                        },
+                        {
+                          "type": "text",
+                          "id": "c1gvp",
+                          "x": 20,
+                          "y": 84,
+                          "name": "Dest",
+                          "fill": "#FFFFFF",
+                          "content": "武功山",
+                          "fontFamily": "Inter",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "vYrt4",
+                          "x": 20,
+                          "y": 118,
+                          "name": "Tag",
+                          "fill": "#FFFFFFB3",
+                          "content": "默认封面",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kNk3m",
+                          "x": 16,
+                          "y": 14,
+                          "name": "Badge 规划中",
+                          "fill": "#EDE9FE",
+                          "cornerRadius": 999,
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "UVYuP",
+                              "name": "t",
+                              "fill": "#6D28D9",
+                              "content": "规划中",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "p8vn2f",
+                              "name": "i",
+                              "opacity": 0.8,
+                              "width": 11,
+                              "height": 11,
+                              "icon": "chevron-down",
+                              "library": "lucide",
+                              "fill": "#6D28D9"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ss2vE",
+                      "name": "Info",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 9,
+                      "padding": [
+                        15,
+                        20,
+                        18,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "h2xlO",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "武功山之旅",
+                          "fontFamily": "Inter",
+                          "fontSize": 17,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Nv9X9",
+                          "name": "DateChip",
+                          "cornerRadius": 8,
+                          "stroke": "$primary",
+                          "gap": 7,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "j0tFIM",
+                              "name": "i",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "calendar-plus",
+                              "library": "lucide",
+                              "fill": "$primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "o9sgu",
+                              "name": "t",
+                              "fill": "$primary",
+                              "content": "设置日期",
+                              "fontFamily": "Inter",
+                              "fontSize": 12.5,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "eB2Fe",
+                              "name": "hint",
+                              "fill": "$faint",
+                              "content": "· 让行程更清晰",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HncJ1",
+                      "layoutPosition": "absolute",
+                      "x": 16,
+                      "y": 196,
+                      "name": "DatePop",
+                      "width": 358,
+                      "fill": "$surface",
+                      "cornerRadius": 14,
+                      "stroke": "$line",
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#0F172A33",
+                        "offset": {
+                          "x": 0,
+                          "y": 10
+                        },
+                        "blur": 32
+                      },
+                      "layout": "vertical",
+                      "gap": 11,
+                      "padding": 14,
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "hUGsn",
+                          "layoutPosition": "absolute",
+                          "x": 30,
+                          "y": -7,
+                          "name": "Arrow",
+                          "rotation": 45,
+                          "fill": "$surface",
+                          "width": 13,
+                          "height": 13,
+                          "stroke": "$line"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KFcRG",
+                          "name": "PTitle",
+                          "fill": "$ink",
+                          "content": "设置旅行日期",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "j6t3V",
+                          "name": "DRow",
+                          "width": "fill_container",
+                          "gap": 10,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "m1Pja",
+                              "name": "F 开始",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 5,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "o7FLbp",
+                                  "name": "lb",
+                                  "fill": "$sub",
+                                  "content": "开始",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "g54tg",
+                                  "name": "Inp",
+                                  "width": "fill_container",
+                                  "height": 36,
+                                  "fill": "$surface",
+                                  "cornerRadius": 8,
+                                  "stroke": "$line",
+                                  "padding": [
+                                    0,
+                                    10
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "iuubU",
+                                      "name": "v",
+                                      "fill": "$ink",
+                                      "content": "2026-10-01",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "T31xyQ",
+                                      "name": "i",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "calendar",
+                                      "library": "lucide",
+                                      "fill": "$faint"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Xivqg",
+                              "name": "F 结束",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 5,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "SKEeq",
+                                  "name": "lb",
+                                  "fill": "$sub",
+                                  "content": "结束",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "fqjKE",
+                                  "name": "Inp",
+                                  "width": "fill_container",
+                                  "height": 36,
+                                  "fill": "$surface",
+                                  "cornerRadius": 8,
+                                  "stroke": "$line",
+                                  "padding": [
+                                    0,
+                                    10
+                                  ],
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "eNKdF",
+                                      "name": "v",
+                                      "fill": "$ink",
+                                      "content": "2026-10-04",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12.5,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "type": "icon",
+                                      "id": "EhXKK",
+                                      "name": "i",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "calendar",
+                                      "library": "lucide",
+                                      "fill": "$faint"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wodro",
+                          "name": "QuickRow",
+                          "width": "fill_container",
+                          "gap": 7,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "zhJ6a",
+                              "name": "Q 本周末",
+                              "fill": "$bg",
+                              "cornerRadius": 999,
+                              "padding": [
+                                5,
+                                11
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "QLjvj",
+                                  "name": "t",
+                                  "fill": "$sub",
+                                  "content": "本周末",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "LDBDe",
+                              "name": "Q 下周",
+                              "fill": "$bg",
+                              "cornerRadius": 999,
+                              "padding": [
+                                5,
+                                11
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "QoZjp",
+                                  "name": "t",
+                                  "fill": "$sub",
+                                  "content": "下周",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HxhV5",
+                              "name": "Q 国庆假期",
+                              "fill": "$bg",
+                              "cornerRadius": 999,
+                              "padding": [
+                                5,
+                                11
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Ym3eL",
+                                  "name": "t",
+                                  "fill": "$sub",
+                                  "content": "国庆假期",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uMBdl",
+                          "name": "PFoot",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "justifyContent": "end",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "vKKU3",
+                              "name": "Cancel",
+                              "cornerRadius": 8,
+                              "stroke": "$line",
+                              "padding": [
+                                7,
+                                14
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "cFkbI",
+                                  "name": "t",
+                                  "fill": "$sub",
+                                  "content": "取消",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UoSs7",
+                              "name": "Ok",
+                              "fill": "$primary",
+                              "cornerRadius": 8,
+                              "padding": [
+                                7,
+                                16
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "fsrqy",
+                                  "name": "t",
+                                  "fill": "#FFFFFF",
+                                  "content": "确定",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aW4rO",
+                  "name": "Card 京都 · 弹层打开",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0F172A0F",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 8
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VM3ny",
+                      "name": "Cover",
+                      "width": "fill_container",
+                      "height": 150,
+                      "fill": "#0E7490",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "dsome",
+                          "x": 258,
+                          "y": 26,
+                          "name": "Sun",
+                          "opacity": 0.35,
+                          "fill": "#FFFFFF",
+                          "width": 42,
+                          "height": 42
+                        },
+                        {
+                          "type": "path",
+                          "id": "D6Ckp8",
+                          "x": 0,
+                          "y": 66,
+                          "name": "HB",
+                          "opacity": 0.5,
+                          "geometry": "M0 66l86-48 64 38 90-48 150 56v20h-390z",
+                          "viewBox": [
+                            0,
+                            0,
+                            390,
+                            84
+                          ],
+                          "fill": "#0A5A70",
+                          "width": 390,
+                          "height": 84
+                        },
+                        {
+                          "type": "path",
+                          "id": "myr6F",
+                          "x": 0,
+                          "y": 98,
+                          "name": "HF",
+                          "opacity": 0.8,
+                          "geometry": "M0 52v-30l110-22 105 36 95-30 80 24v22z",
+                          "viewBox": [
+                            0,
+                            0,
+                            390,
+                            52
+                          ],
+                          "fill": "#0B4A5C",
+                          "width": 390,
+                          "height": 52
+                        },
+                        {
+                          "type": "text",
+                          "id": "jfE7M",
+                          "x": 20,
+                          "y": 84,
+                          "name": "Dest",
+                          "fill": "#FFFFFF",
+                          "content": "京都",
+                          "fontFamily": "Inter",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "zsK69",
+                          "x": 20,
+                          "y": 118,
+                          "name": "Tag",
+                          "fill": "#FFFFFFB3",
+                          "content": "默认封面",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MBWBz",
+                          "x": 16,
+                          "y": 14,
+                          "name": "Badge 进行中",
+                          "fill": "#D1FAE5",
+                          "cornerRadius": 999,
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "jaHR8",
+                              "name": "t",
+                              "fill": "#047857",
+                              "content": "进行中",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "icon",
+                              "id": "h5ZI1N",
+                              "name": "i",
+                              "opacity": 0.8,
+                              "width": 11,
+                              "height": 11,
+                              "icon": "chevron-down",
+                              "library": "lucide",
+                              "fill": "#047857"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b7ecvS",
+                      "name": "Info",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 9,
+                      "padding": [
+                        15,
+                        20,
+                        18,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DOWR3",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "京都之旅",
+                          "fontFamily": "Inter",
+                          "fontSize": 17,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "J3rki",
+                          "name": "Meta",
+                          "gap": 7,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Zkl2r",
+                              "name": "i",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$faint"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ruUlg",
+                              "name": "t",
+                              "fill": "$faint",
+                              "content": "2026.09.21 – 09.24 · 4 天",
+                              "fontFamily": "Inter",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "d5G8x9",
+              "layoutPosition": "absolute",
+              "x": 110,
+              "y": 650,
+              "name": "PlannerInset",
+              "width": 610,
+              "fill": "$surface",
+              "cornerRadius": 14,
+              "stroke": "$line",
+              "layout": "vertical",
+              "gap": 10,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Nytis",
+                  "name": "InsetLabel",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "qfWRt",
+                      "name": "t",
+                      "fill": "$sub",
+                      "content": "规划器子头部 · 无日期时同样提供入口",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OfX0b",
+                  "name": "SubHeader",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 12,
+                  "stroke": "$line",
+                  "gap": 12,
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "d1d44",
+                      "name": "i",
+                      "width": 16,
+                      "height": 16,
+                      "icon": "chevron-left",
+                      "library": "lucide",
+                      "fill": "$sub"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dNP0y",
+                      "name": "TBlock",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mc3Or",
+                          "name": "t",
+                          "fill": "$ink",
+                          "content": "京都之旅",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ddvzt",
+                          "name": "m",
+                          "fill": "$faint",
+                          "content": "京都 · 2 人 · 预算 ¥5,000",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OH7zX",
+                      "name": "DateChip",
+                      "fill": "$primary-soft",
+                      "cornerRadius": 999,
+                      "gap": 6,
+                      "padding": [
+                        6,
+                        13
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "aosAN",
+                          "name": "i",
+                          "width": 13,
+                          "height": 13,
+                          "icon": "calendar-plus",
+                          "library": "lucide",
+                          "fill": "$primary-deep"
+                        },
+                        {
+                          "type": "text",
+                          "id": "VVZsk",
+                          "name": "t",
+                          "fill": "$primary-deep",
+                          "content": "设置日期",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JU2ji",
+                      "name": "Sp",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "ohl1c",
+                      "name": "badge",
+                      "fill": "#6D28D9",
+                      "content": "规划中",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OKriM",
+              "layoutPosition": "absolute",
+              "x": 760,
+              "y": 650,
+              "name": "Note",
+              "width": 570,
+              "fill": "#EFF6FF",
+              "cornerRadius": 12,
+              "stroke": "#BFDBFE",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PeaAv",
+                  "name": "t",
+                  "fill": "#1D4ED8",
+                  "content": "设计说明",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "NYapy",
+                  "name": "b",
+                  "fill": "#1E40AF",
+                  "textGrowth": "fixed-width",
+                  "width": 542,
+                  "content": "① 「日期待定」改为可点 chip(虚线框 + 📅 图标),点击弹出右侧快捷日期弹层,选好即 PATCH 保存并即时刷新卡片与 Tab 归类;\n② 弹层提供 本周末 / 下周 / 国庆假期 等快捷项,减少输入;\n③ 规划器子头部在日期缺失时同步显示「设置日期」入口,规划过程中无感知问题消除;\n④ 未来:AI 对话可识别「国庆去云南 5 天」自动回填日期。",
+                  "lineHeight": 1.55,
+                  "fontFamily": "Inter",
+                  "fontSize": 11.5,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "VxWcJ",
+      "x": 23960,
+      "y": -48,
+      "name": "Label 重设计-05b",
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "YGzXE",
+          "name": "LabelMain",
+          "fill": "$ink",
+          "content": "重设计 05b · 自定义封面上传 + 默认封面语义化",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "zkEbH",
+          "name": "LabelSub",
+          "fill": "$faint",
+          "content": "hover 上传入口 / 已上传态 / ⋯ 菜单封面项 / 默认封面 = 目的地名",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "SJHMs",
+      "x": 23960,
+      "y": 0,
+      "name": "重设计 05b · 创建时设置封面",
+      "clip": true,
+      "width": 1440,
+      "height": 940,
+      "fill": "#F1F4F8",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "O7Pz2",
+          "type": "ref",
+          "ref": "m5xEEq",
+          "name": "TopBar",
+          "width": "fill_container",
+          "height": 72
+        },
+        {
+          "type": "frame",
+          "id": "Y55tY",
+          "name": "WizardBody",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 18,
+          "padding": [
+            30,
+            110,
+            0,
+            110
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "c0nLFu",
+              "name": "StepBar",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "r3FXBS",
+                  "name": "Step 基本信息",
+                  "gap": 7,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "klbD4",
+                      "name": "C",
+                      "width": 26,
+                      "height": 26,
+                      "fill": "$primary",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vybko",
+                          "name": "n",
+                          "fill": "#FFFFFF",
+                          "content": "1",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "c4RUlU",
+                      "name": "t",
+                      "fill": "$ink",
+                      "content": "基本信息",
+                      "fontFamily": "Inter",
+                      "fontSize": 12.5,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "IofRW",
+                  "name": "Line",
+                  "fill": "#E2E8F0",
+                  "width": 42,
+                  "height": 2
+                },
+                {
+                  "type": "frame",
+                  "id": "bNDU2",
+                  "name": "Step 旅行偏好",
+                  "gap": 7,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "a5EaJx",
+                      "name": "C",
+                      "width": 26,
+                      "height": 26,
+                      "fill": "#E2E8F0",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "D47zgK",
+                          "name": "n",
+                          "fill": "$faint",
+                          "content": "2",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "CJeIu",
+                      "name": "t",
+                      "fill": "$faint",
+                      "content": "旅行偏好",
+                      "fontFamily": "Inter",
+                      "fontSize": 12.5
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "jz6yG",
+                  "name": "Line",
+                  "fill": "#E2E8F0",
+                  "width": 42,
+                  "height": 2
+                },
+                {
+                  "type": "frame",
+                  "id": "o3aQtz",
+                  "name": "Step 行程约束",
+                  "gap": 7,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DVm9i",
+                      "name": "C",
+                      "width": 26,
+                      "height": 26,
+                      "fill": "#E2E8F0",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zFeCp",
+                          "name": "n",
+                          "fill": "$faint",
+                          "content": "3",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "NpKEt",
+                      "name": "t",
+                      "fill": "$faint",
+                      "content": "行程约束",
+                      "fontFamily": "Inter",
+                      "fontSize": 12.5
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "m3IidY",
+                  "name": "Line",
+                  "fill": "#E2E8F0",
+                  "width": 42,
+                  "height": 2
+                },
+                {
+                  "type": "frame",
+                  "id": "qyr5K",
+                  "name": "Step AI 生成方案",
+                  "gap": 7,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jk4iN",
+                      "name": "C",
+                      "width": 26,
+                      "height": 26,
+                      "fill": "#E2E8F0",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zLkZY",
+                          "name": "n",
+                          "fill": "$faint",
+                          "content": "4",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "CLWOI",
+                      "name": "t",
+                      "fill": "$faint",
+                      "content": "AI 生成方案",
+                      "fontFamily": "Inter",
+                      "fontSize": 12.5
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "H7MgPE",
+              "name": "StepHint",
+              "fill": "$faint",
+              "content": "第 1 步 · 基本信息 — 目的地、日期，以及这段旅程的封面",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "Bqgty",
+              "name": "WizardCard",
+              "width": 1060,
+              "fill": "$surface",
+              "cornerRadius": 20,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0F172A0F",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 16
+              },
+              "gap": 36,
+              "padding": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ReKxh",
+                  "name": "LeftFields",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "A1MHc8",
+                      "name": "F 目的地",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "kgGwh",
+                          "name": "lb",
+                          "fill": "$sub",
+                          "content": "目的地",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "G9ckUI",
+                          "name": "Inp",
+                          "width": "fill_container",
+                          "height": 42,
+                          "fill": "$surface",
+                          "cornerRadius": 10,
+                          "stroke": "$line",
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NkcdU",
+                              "name": "v",
+                              "fill": "$ink",
+                              "content": "武功山",
+                              "fontFamily": "Inter",
+                              "fontSize": 13.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ECg8b",
+                      "name": "DateRow",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "sB4Tu",
+                          "name": "F 开始日期",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "nG4PI",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "开始日期",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "zdDrl",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 42,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "SRBla",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "2026-10-01",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "lUObq",
+                                  "name": "i",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "calendar",
+                                  "library": "lucide",
+                                  "fill": "$faint"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "X9XrAS",
+                          "name": "F 结束日期",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "aS8LR",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "结束日期",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "VlAJ8",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 42,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ixJvR",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "2026-10-04",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "gamfP",
+                                  "name": "i",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "calendar",
+                                  "library": "lucide",
+                                  "fill": "$faint"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "e4puhT",
+                      "name": "MetaRow",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ZRrbk",
+                          "name": "F 旅行人数",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "K4zGKM",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "旅行人数",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "v9VBb",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 42,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "DfDvy",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "2",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SESnk",
+                          "name": "F 预算 (¥)",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "eCe8H",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "预算 (¥)",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "KZEaT",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 42,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "rgetV",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "3000",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bJ2qz",
+                      "name": "F 交通方式",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FXEAg",
+                          "name": "lb",
+                          "fill": "$sub",
+                          "content": "交通方式",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bduS8",
+                          "name": "Inp",
+                          "width": "fill_container",
+                          "height": 42,
+                          "fill": "$surface",
+                          "cornerRadius": 10,
+                          "stroke": "$line",
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "laq4y",
+                              "name": "v",
+                              "fill": "$faint",
+                              "content": "自驾 / 公共交通",
+                              "fontFamily": "Inter",
+                              "fontSize": 13.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "j1ST73",
+                  "name": "RightCover",
+                  "width": 400,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "myQpz",
+                      "name": "RL",
+                      "fill": "$sub",
+                      "content": "旅行封面",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "S0zcV",
+                      "name": "CoverPreview",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 210,
+                      "fill": "#3F4C63",
+                      "cornerRadius": 14,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "L9STNk",
+                          "x": 286,
+                          "y": 30,
+                          "name": "Sun",
+                          "opacity": 0.35,
+                          "fill": "#FFFFFF",
+                          "width": 44,
+                          "height": 44
+                        },
+                        {
+                          "type": "path",
+                          "id": "Md0Th",
+                          "x": 0,
+                          "y": 88,
+                          "name": "HB",
+                          "opacity": 0.5,
+                          "geometry": "M0 70l90-46 70 36 90-50 150 56v26h-400z",
+                          "viewBox": [
+                            0,
+                            0,
+                            400,
+                            92
+                          ],
+                          "fill": "#5B6B86",
+                          "width": 400,
+                          "height": 92
+                        },
+                        {
+                          "type": "path",
+                          "id": "tyEqU",
+                          "x": 0,
+                          "y": 128,
+                          "name": "HF",
+                          "opacity": 0.85,
+                          "geometry": "M0 82v-52l115-30 110 46 95-38 80 30v44z",
+                          "viewBox": [
+                            0,
+                            0,
+                            400,
+                            82
+                          ],
+                          "fill": "#2A3245",
+                          "width": 400,
+                          "height": 82
+                        },
+                        {
+                          "type": "text",
+                          "id": "tReVk",
+                          "x": 22,
+                          "y": 128,
+                          "name": "Dest",
+                          "fill": "#FFFFFF",
+                          "content": "武功山",
+                          "fontFamily": "Inter",
+                          "fontSize": 30,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "d0NQxq",
+                          "x": 22,
+                          "y": 168,
+                          "name": "Tag",
+                          "fill": "#FFFFFFB3",
+                          "content": "默认封面预览 · 随目的地联动",
+                          "fontFamily": "Inter",
+                          "fontSize": 10.5,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Q3EQSU",
+                      "name": "UploadRow",
+                      "width": "fill_container",
+                      "gap": 10,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "s74t8",
+                          "name": "UploadBtn",
+                          "width": "fill_container",
+                          "height": 44,
+                          "cornerRadius": 12,
+                          "stroke": "$primary",
+                          "gap": 7,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "OImOb",
+                              "name": "i",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "image-plus",
+                              "library": "lucide",
+                              "fill": "$primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "pZ3fH",
+                              "name": "t",
+                              "fill": "$primary",
+                              "content": "上传自定义封面",
+                              "fontFamily": "Inter",
+                              "fontSize": 13.5,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OB6XY",
+                      "name": "CoverNote",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "f0qeoY",
+                          "name": "t",
+                          "fill": "$faint",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "可选 · 不选则使用默认插画；创建后仍可在卡片上更换",
+                          "lineHeight": 1.5,
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GSvae",
+              "name": "WizardNav",
+              "width": 1060,
+              "gap": 12,
+              "justifyContent": "space_between",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "RfWrS",
+                  "name": "Back",
+                  "fill": "$surface",
+                  "cornerRadius": 12,
+                  "stroke": "$line",
+                  "padding": [
+                    11,
+                    22
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bslQO",
+                      "name": "t",
+                      "fill": "$faint",
+                      "content": "上一步",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VsEgF",
+                  "name": "Next",
+                  "fill": "$primary",
+                  "cornerRadius": 12,
+                  "padding": [
+                    11,
+                    26
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "e5WUh",
+                      "name": "t",
+                      "fill": "#FFFFFF",
+                      "content": "下一步",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aWmK9",
+              "name": "NoteB2",
+              "width": 1060,
+              "fill": "#F0FDF4",
+              "cornerRadius": 12,
+              "stroke": "#BBF7D0",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BBBDH",
+                  "name": "t",
+                  "fill": "#047857",
+                  "content": "设计说明 · 封面为什么前置",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "v5urS",
+                  "name": "b",
+                  "fill": "#065F46",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "① 封面是这段旅程的「第一印象」,应该在创建时就确定,而不是生成完计划才补救;\n② 右侧预览实时跟随目的地输入(改「武功山」→ 封面名同步变),用户立刻看到成果;\n③ 「上传自定义封面」虚线按钮为可选项,不选则用默认插画;选中后预览区换成实拍图;\n④ 创建完成后,卡片 hover/⋯ 菜单仍保留 更换/移除封面 作为维护入口(见下一块画板);\n⑤ 上传统一走 PUT /trips/{id}/cover(创建向导拿到 trip id 后立即补传)。",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Inter",
+                  "fontSize": 11.5,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "K4y0em",
+      "x": 25520,
+      "y": -48,
+      "name": "Label 重设计-05c",
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "zbeRH",
+          "name": "LabelMain",
+          "fill": "$ink",
+          "content": "重设计 05c · 卡片维护入口",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "T6PUk",
+          "name": "LabelSub",
+          "fill": "$faint",
+          "content": "创建后 · hover 上传 / 已上传文件名 / ⋯ 菜单 更换·移除封面",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "s8GQzk",
+      "x": 25520,
+      "y": 0,
+      "name": "重设计 05c · 卡片封面维护",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "#F1F4F8",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "TielD",
+          "type": "ref",
+          "ref": "m5xEEq",
+          "name": "TopBar",
+          "width": "fill_container",
+          "height": 72
+        },
+        {
+          "type": "frame",
+          "id": "lcREW",
+          "name": "PageBody",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            36,
+            110,
+            0,
+            110
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "WlEcQ",
+              "name": "PageHead",
+              "width": "fill_container",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "fdjUy",
+                  "name": "HeadLeft",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dE8ct",
+                      "name": "H1",
+                      "fill": "$ink",
+                      "content": "我的旅行",
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lR4iJ",
+                      "name": "Sub",
+                      "fill": "$faint",
+                      "content": "封面 = 这段旅程的第一印象",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Id1Up",
+              "name": "CardGrid",
+              "width": "fill_container",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "J7lXzJ",
+                  "name": "Card A · hover 上传",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0F172A0F",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 8
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ie11l",
+                      "name": "Cover",
+                      "width": "fill_container",
+                      "height": 150,
+                      "fill": "#0E7490",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "KbTNg",
+                          "x": 258,
+                          "y": 26,
+                          "name": "Sun",
+                          "opacity": 0.35,
+                          "fill": "#FFFFFF",
+                          "width": 42,
+                          "height": 42
+                        },
+                        {
+                          "type": "path",
+                          "id": "fqFCR",
+                          "x": 0,
+                          "y": 66,
+                          "name": "HB",
+                          "opacity": 0.5,
+                          "geometry": "M0 66l86-48 64 38 90-48 150 56v20h-390z",
+                          "viewBox": [
+                            0,
+                            0,
+                            390,
+                            84
+                          ],
+                          "fill": "#0A5A70",
+                          "width": 390,
+                          "height": 84
+                        },
+                        {
+                          "type": "path",
+                          "id": "p7lu4A",
+                          "x": 0,
+                          "y": 98,
+                          "name": "HF",
+                          "opacity": 0.8,
+                          "geometry": "M0 52v-30l110-22 105 36 95-30 80 24v22z",
+                          "viewBox": [
+                            0,
+                            0,
+                            390,
+                            52
+                          ],
+                          "fill": "#0B4A5C",
+                          "width": 390,
+                          "height": 52
+                        },
+                        {
+                          "type": "text",
+                          "id": "zQaLg",
+                          "x": 20,
+                          "y": 82,
+                          "name": "Dest",
+                          "fill": "#FFFFFF",
+                          "content": "京都",
+                          "fontFamily": "Inter",
+                          "fontSize": 26,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "fUOfd",
+                          "x": 20,
+                          "y": 116,
+                          "name": "Tag",
+                          "fill": "#FFFFFFB3",
+                          "content": "默认封面 · 未上传",
+                          "fontFamily": "Inter",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fo6NT",
+                          "x": 0,
+                          "y": 0,
+                          "name": "HoverOv",
+                          "width": 388,
+                          "height": 150,
+                          "fill": "#0F172A66",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "IW0lJ",
+                              "name": "UpPill",
+                              "fill": "#FFFFFFF2",
+                              "cornerRadius": 999,
+                              "effect": {
+                                "type": "shadow",
+                                "shadowType": "outer",
+                                "color": "#0F172A33",
+                                "offset": {
+                                  "x": 0,
+                                  "y": 2
+                                },
+                                "blur": 8
+                              },
+                              "gap": 7,
+                              "padding": [
+                                9,
+                                18
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "WTu16",
+                                  "name": "i",
+                                  "width": 15,
+                                  "height": 15,
+                                  "icon": "image-plus",
+                                  "library": "lucide",
+                                  "fill": "$ink"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "gHnym",
+                                  "name": "t",
+                                  "fill": "$ink",
+                                  "content": "上传封面",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GuLib",
+                          "x": 16,
+                          "y": 14,
+                          "name": "Badge 进行中",
+                          "fill": "#D1FAE5",
+                          "cornerRadius": 999,
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "sI6VH",
+                              "name": "t",
+                              "fill": "#047857",
+                              "content": "进行中",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i8AIEP",
+                      "name": "Info",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 9,
+                      "padding": [
+                        15,
+                        20,
+                        18,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "x8Nu7",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "京都之旅",
+                          "fontFamily": "Inter",
+                          "fontSize": 17,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "W0cpcy",
+                          "name": "Meta",
+                          "gap": 7,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "C1VHQB",
+                              "name": "i",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$faint"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Y9G3dZ",
+                              "name": "t",
+                              "fill": "$faint",
+                              "content": "2026.09.21 – 09.24 · 4 天",
+                              "fontFamily": "Inter",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wfiuA",
+                  "name": "Card B · 已上传+菜单",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 16,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0F172A0F",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 8
+                  },
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "JLfRR",
+                      "name": "Cover",
+                      "width": "fill_container",
+                      "height": 150,
+                      "fill": "#60A5FA",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "QUQpj",
+                          "x": 300,
+                          "y": 20,
+                          "name": "Sun",
+                          "fill": "#FDE68A",
+                          "width": 34,
+                          "height": 34
+                        },
+                        {
+                          "type": "path",
+                          "id": "TUDmE",
+                          "x": 0,
+                          "y": 70,
+                          "name": "M1",
+                          "geometry": "M0 60l70-40 60 32 80-44 90 40 88-18v50h-388z",
+                          "viewBox": [
+                            0,
+                            0,
+                            388,
+                            80
+                          ],
+                          "fill": "#334155",
+                          "width": 388,
+                          "height": 80
+                        },
+                        {
+                          "type": "path",
+                          "id": "sl7X3",
+                          "x": 0,
+                          "y": 104,
+                          "name": "M2",
+                          "geometry": "M0 46v-20l90-20 90 26 90-22 118 18v18z",
+                          "viewBox": [
+                            0,
+                            0,
+                            388,
+                            46
+                          ],
+                          "fill": "#1E293B",
+                          "width": 388,
+                          "height": 46
+                        },
+                        {
+                          "type": "frame",
+                          "id": "A5pjYZ",
+                          "x": 16,
+                          "y": 112,
+                          "name": "FileChip",
+                          "fill": "#0F172ACC",
+                          "cornerRadius": 999,
+                          "gap": 6,
+                          "padding": [
+                            5,
+                            11
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "V9nda6",
+                              "name": "i",
+                              "width": 11,
+                              "height": 11,
+                              "icon": "check",
+                              "library": "lucide",
+                              "fill": "#4ADE80"
+                            },
+                            {
+                              "type": "text",
+                              "id": "c184c",
+                              "name": "t",
+                              "fill": "#FFFFFF",
+                              "content": "wugongshan.jpg",
+                              "fontFamily": "Inter",
+                              "fontSize": 10.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Rw9uX",
+                          "x": 16,
+                          "y": 14,
+                          "name": "Badge 进行中",
+                          "fill": "#D1FAE5",
+                          "cornerRadius": 999,
+                          "padding": [
+                            5,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NiLEb",
+                              "name": "t",
+                              "fill": "#047857",
+                              "content": "进行中",
+                              "fontFamily": "Inter",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cQsJ5",
+                          "x": 340,
+                          "y": 12,
+                          "name": "MenuBtn",
+                          "width": 32,
+                          "height": 32,
+                          "fill": "$primary",
+                          "cornerRadius": 999,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "fNwcn",
+                              "name": "i",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "ellipsis",
+                              "library": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "W9tvyw",
+                          "x": 196,
+                          "y": 48,
+                          "name": "Menu",
+                          "width": 176,
+                          "fill": "$surface",
+                          "cornerRadius": 12,
+                          "stroke": "$line",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#0F172A26",
+                            "offset": {
+                              "x": 0,
+                              "y": 6
+                            },
+                            "blur": 20
+                          },
+                          "layout": "vertical",
+                          "padding": 5,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "quZd5",
+                              "name": "MI 更换封面",
+                              "width": "fill_container",
+                              "fill": "$bg",
+                              "cornerRadius": 8,
+                              "gap": 9,
+                              "padding": [
+                                8,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "yXO3k",
+                                  "name": "i",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "image-plus",
+                                  "library": "lucide",
+                                  "fill": "$ink"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "dCyXB",
+                                  "name": "t",
+                                  "fill": "$ink",
+                                  "content": "更换封面",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "furb6",
+                              "name": "MI 移除封面",
+                              "width": "fill_container",
+                              "cornerRadius": 8,
+                              "gap": 9,
+                              "padding": [
+                                8,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "jnxSH",
+                                  "name": "i",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "image-off",
+                                  "library": "lucide",
+                                  "fill": "$ink"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "a5dRax",
+                                  "name": "t",
+                                  "fill": "$ink",
+                                  "content": "移除封面",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "I8zNs",
+                              "name": "Div",
+                              "fill": "$line",
+                              "width": 166,
+                              "height": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "QLVSU",
+                              "name": "MI 编辑信息",
+                              "width": "fill_container",
+                              "cornerRadius": 8,
+                              "gap": 9,
+                              "padding": [
+                                8,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "A7ChP7",
+                                  "name": "i",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "pencil-line",
+                                  "library": "lucide",
+                                  "fill": "$ink"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "D7XEs",
+                                  "name": "t",
+                                  "fill": "$ink",
+                                  "content": "编辑信息",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "BMmcx",
+                              "name": "MI 删除",
+                              "width": "fill_container",
+                              "cornerRadius": 8,
+                              "gap": 9,
+                              "padding": [
+                                8,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "xDu88",
+                                  "name": "i",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "trash-2",
+                                  "library": "lucide",
+                                  "fill": "$danger"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AWzY9",
+                                  "name": "t",
+                                  "fill": "$danger",
+                                  "content": "删除",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DDDoL",
+                      "name": "Info",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 9,
+                      "padding": [
+                        15,
+                        20,
+                        18,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "z4oRd",
+                          "name": "Title",
+                          "fill": "$ink",
+                          "content": "武功山之旅",
+                          "fontFamily": "Inter",
+                          "fontSize": 17,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fN8bb",
+                          "name": "Meta",
+                          "gap": 7,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "hD0xj",
+                              "name": "i",
+                              "width": 14,
+                              "height": 14,
+                              "icon": "calendar",
+                              "library": "lucide",
+                              "fill": "$faint"
+                            },
+                            {
+                              "type": "text",
+                              "id": "cTDi7",
+                              "name": "t",
+                              "fill": "$faint",
+                              "content": "2026.10.01 – 10.05 · 5 天",
+                              "fontFamily": "Inter",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PfULf",
+              "name": "NoteC",
+              "width": "fill_container",
+              "fill": "#FFFBEB",
+              "cornerRadius": 10,
+              "stroke": "#FDE68A",
+              "gap": 10,
+              "padding": [
+                10,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "SaM66",
+                  "name": "i",
+                  "width": 15,
+                  "height": 15,
+                  "icon": "lightbulb",
+                  "library": "lucide",
+                  "fill": "#B45309"
+                },
+                {
+                  "type": "text",
+                  "id": "n7THP",
+                  "name": "t",
+                  "fill": "#92400E",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "维护入口：创建后仍可在卡片上补救 — hover 封面点「上传封面」；已上传卡片显示文件名 chip,⋯ 菜单多出 更换/移除封面；移除即恢复默认语义封面(目的地名 + 生成插画)。",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ppn9x",
+      "x": 27080,
+      "y": -48,
+      "name": "Label 方案A-05d",
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "LocZ6",
+          "name": "LabelMain",
+          "fill": "$ink",
+          "content": "方案 A · 对话式创建",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "V0bNsa",
+          "name": "LabelSub",
+          "fill": "$faint",
+          "content": "一句话创建 → AI 生成 → 缺什么对话里问什么 → 事后编辑",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "B7kM2",
+      "x": 27080,
+      "y": 0,
+      "name": "方案 A · 对话式创建",
+      "clip": true,
+      "width": 1440,
+      "height": 900,
+      "fill": "#F1F4F8",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "Z8YVY",
+          "type": "ref",
+          "ref": "m5xEEq",
+          "name": "TopBar",
+          "width": "fill_container",
+          "height": 72
+        },
+        {
+          "type": "frame",
+          "id": "sSLSG",
+          "name": "Body",
+          "width": "fill_container",
+          "gap": 40,
+          "padding": [
+            40,
+            110,
+            0,
+            110
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Dy2rm",
+              "name": "Zone1 创建瞬间",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 18,
+              "stroke": "$line",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0F172A0F",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 16
+              },
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "E7yLAQ",
+                  "name": "Z1Head",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "JuBl3",
+                      "name": "t",
+                      "fill": "$ink",
+                      "content": "① 创建瞬间 · 新建旅行",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "j4njbw",
+                      "name": "Sp",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "eWXPP",
+                      "name": "s",
+                      "fill": "$faint",
+                      "content": "点「新建旅行」直接弹出输入框",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "U2g1q",
+                  "name": "NLDlg",
+                  "width": "fill_container",
+                  "fill": "#FBFCFE",
+                  "cornerRadius": 16,
+                  "stroke": "$line",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dt3wp",
+                      "name": "Q",
+                      "fill": "$ink",
+                      "content": "想去哪儿？",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zEld2",
+                      "name": "Input",
+                      "width": "fill_container",
+                      "height": 92,
+                      "fill": "$surface",
+                      "cornerRadius": 12,
+                      "stroke": "$line",
+                      "padding": [
+                        12,
+                        14
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XE7oe",
+                          "name": "ph",
+                          "fill": "$faint",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "我和女朋友国庆想去云南玩 5 天,不想去太商业化的地方,预算人均 3000…",
+                          "lineHeight": 1.6,
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C3AhAn",
+                      "name": "Chips",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "uXDa9",
+                          "name": "C 国庆出行",
+                          "fill": "$bg",
+                          "cornerRadius": 999,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yJD8t",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "国庆出行",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "sQNQT",
+                          "name": "C 三天两夜",
+                          "fill": "$bg",
+                          "cornerRadius": 999,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Ykd9V",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "三天两夜",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "meYEU",
+                          "name": "C 小众目的地",
+                          "fill": "$bg",
+                          "cornerRadius": 999,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "dirF7",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "小众目的地",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZFLJ2",
+                          "name": "C 自驾",
+                          "fill": "$bg",
+                          "cornerRadius": 999,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cX5ti",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "自驾",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZdEij",
+                      "name": "GoBtn",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "$primary",
+                      "cornerRadius": 12,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "y8Ygk8",
+                          "name": "t",
+                          "fill": "#FFFFFF",
+                          "content": "开始规划",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "o01oIi",
+                          "name": "i",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "arrow-right",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "cH10O",
+                  "name": "Flow1",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "e2EB3",
+                      "name": "i",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "corner-down-right",
+                      "library": "lucide",
+                      "fill": "$primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gfKc9",
+                      "name": "t",
+                      "fill": "$sub",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "无需注册表单 · 目的地/日期/偏好全部交给 AI 理解,一句话即创建并开始规划",
+                      "lineHeight": 1.5,
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "D36HeP",
+              "name": "Zone2 AI追问",
+              "width": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 18,
+              "stroke": "$line",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#0F172A0F",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 16
+              },
+              "layout": "vertical",
+              "gap": 14,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "t5CBd",
+                  "name": "Z2Head",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "hBWVd",
+                      "name": "t",
+                      "fill": "$ink",
+                      "content": "② 规划中 · AI 追问缺失信息",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "X6kTe",
+                      "name": "Sp",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "oJ7Cb",
+                      "name": "s",
+                      "fill": "$faint",
+                      "content": "不弹表单,消息内点选",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dMSB2",
+                  "name": "Chat",
+                  "width": "fill_container",
+                  "fill": "#FBFCFE",
+                  "cornerRadius": 16,
+                  "stroke": "$line",
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Y3iVXt",
+                      "name": "UserRow",
+                      "width": "fill_container",
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "oFbyc",
+                          "name": "UB",
+                          "fill": "$primary",
+                          "cornerRadius": [
+                            16,
+                            16,
+                            4,
+                            16
+                          ],
+                          "padding": [
+                            10,
+                            13
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "cc7nT",
+                              "name": "t",
+                              "fill": "#FFFFFF",
+                              "content": "我想去武功山玩 3 天,帮我规划",
+                              "fontFamily": "Inter",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BCIQe",
+                      "name": "AIRow",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "rEgTX",
+                          "name": "AB",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": [
+                            16,
+                            16,
+                            16,
+                            4
+                          ],
+                          "stroke": "$line",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 13,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ZFqZy",
+                              "name": "t",
+                              "fill": "$ink",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "好的,武功山 3 天很合适!出发前还差一个信息:你打算什么时候去?",
+                              "lineHeight": 1.55,
+                              "fontFamily": "Inter",
+                              "fontSize": 12.5,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FMhQc",
+                              "name": "Options",
+                              "width": "fill_container",
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "yZNQy",
+                                  "name": "O 本周末",
+                                  "fill": "$bg",
+                                  "cornerRadius": 10,
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "padding": [
+                                    8,
+                                    14
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "IXiWB",
+                                      "name": "a",
+                                      "fill": "$primary-deep",
+                                      "content": "本周末",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "PQZl1",
+                                      "name": "b",
+                                      "fill": "$faint",
+                                      "content": "10.18 – 10.19",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 10.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "A24V5j",
+                                  "name": "O 下周末",
+                                  "fill": "$bg",
+                                  "cornerRadius": 10,
+                                  "layout": "vertical",
+                                  "gap": 2,
+                                  "padding": [
+                                    8,
+                                    14
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "f4ixf",
+                                      "name": "a",
+                                      "fill": "$primary-deep",
+                                      "content": "下周末",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "FNoXU",
+                                      "name": "b",
+                                      "fill": "$faint",
+                                      "content": "10.25 – 10.26",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 10.5,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "DFA5b",
+                                  "name": "O 自定义",
+                                  "cornerRadius": 10,
+                                  "stroke": "$primary",
+                                  "gap": 6,
+                                  "padding": [
+                                    8,
+                                    14
+                                  ],
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "V76szZ",
+                                      "name": "i",
+                                      "width": 13,
+                                      "height": 13,
+                                      "icon": "calendar-plus",
+                                      "library": "lucide",
+                                      "fill": "$primary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "jvMnx",
+                                      "name": "a",
+                                      "fill": "$primary",
+                                      "content": "选择日期",
+                                      "fontFamily": "Inter",
+                                      "fontSize": 12,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yAoAC",
+                  "name": "Flow2",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "gNV2U",
+                      "name": "i",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "corner-down-right",
+                      "library": "lucide",
+                      "fill": "$primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Wew3n",
+                      "name": "t",
+                      "fill": "$sub",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "点选即回填 → 行程自动归类到对应 Tab;漏答也没关系,卡片上的「设置日期」入口兜底",
+                      "lineHeight": 1.5,
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BGucp",
+          "name": "NoteA",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 6,
+          "padding": [
+            0,
+            110
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "gEVsB",
+              "name": "NA",
+              "width": "fill_container",
+              "fill": "#EFF6FF",
+              "cornerRadius": 12,
+              "stroke": "#BFDBFE",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "UICRU",
+                  "name": "t",
+                  "fill": "#1D4ED8",
+                  "content": "方案 A 要点",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "P1SkIZ",
+                  "name": "b",
+                  "fill": "#1E40AF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 创建 = 一句话,0 表单,转化路径最短\n· 参数收集靠 AI 追问(日期/人数/预算),消息内嵌选项,点选即存\n· 用户想精细控制时,规划器里保留「完善偏好」入口(原向导降级为次级)\n· 封面不进创建流程:默认语义封面自动给,上传在卡片 hover 维护\n· 改动面:新建旅行弹层 + planner 追问交互 + 向导降级",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Inter",
+                  "fontSize": 11.5,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "yb2Dw",
+      "x": 28640,
+      "y": -48,
+      "name": "Label 方案B-05e",
+      "gap": 10,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "hjxIM",
+          "name": "LabelMain",
+          "fill": "$ink",
+          "content": "方案 B · 精简向导(2 步)",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "bFeUS",
+          "name": "LabelSub",
+          "fill": "$faint",
+          "content": "第 1 步核心信息(含可跳过封面)→ 第 2 步自然语言补充 → 生成",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Knho2",
+      "x": 28640,
+      "y": 0,
+      "name": "方案 B · 精简向导",
+      "clip": true,
+      "width": 1440,
+      "height": 940,
+      "fill": "#F1F4F8",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "UZuRM",
+          "type": "ref",
+          "ref": "m5xEEq",
+          "name": "TopBar",
+          "width": "fill_container",
+          "height": 72
+        },
+        {
+          "type": "frame",
+          "id": "V2LfxT",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            32,
+            110,
+            0,
+            110
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cGdEi",
+              "name": "StepBar",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "I2aD3",
+                  "name": "S1",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "QX490",
+                      "name": "C",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$primary",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xjC72",
+                          "name": "n",
+                          "fill": "#FFFFFF",
+                          "content": "1",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "mBXpI",
+                      "name": "t",
+                      "fill": "$ink",
+                      "content": "核心信息",
+                      "fontFamily": "Inter",
+                      "fontSize": 13.5,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "d7YvPr",
+                  "name": "Line",
+                  "fill": "#E2E8F0",
+                  "width": 60,
+                  "height": 2
+                },
+                {
+                  "type": "frame",
+                  "id": "NfU08",
+                  "name": "S2",
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "rf4uU",
+                      "name": "C",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "#E2E8F0",
+                      "cornerRadius": 999,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "j4V88",
+                          "name": "n",
+                          "fill": "$faint",
+                          "content": "2",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "THkiu",
+                      "name": "t",
+                      "fill": "$faint",
+                      "content": "补充说明",
+                      "fontFamily": "Inter",
+                      "fontSize": 13.5
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "aL1Hm",
+              "name": "Steps",
+              "width": "fill_container",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Gkt9F",
+                  "name": "Step1 核心信息",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 18,
+                  "stroke": "$line",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0F172A0F",
+                    "offset": {
+                      "x": 0,
+                      "y": 4
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "gap": 13,
+                  "padding": 22,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "W4q6G",
+                      "name": "S1H",
+                      "width": "fill_container",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "A8JXbm",
+                          "name": "t",
+                          "fill": "$ink",
+                          "content": "第 1 步 · 核心信息",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "M72JjW",
+                          "name": "s",
+                          "fill": "$faint",
+                          "content": "只有目的地必填",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vS5VP",
+                      "name": "F 目的地",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "qYQX3",
+                          "name": "lb",
+                          "fill": "$sub",
+                          "content": "目的地",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "XaexZ",
+                          "name": "Inp",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "$surface",
+                          "cornerRadius": 10,
+                          "stroke": "$line",
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "tI1zI",
+                              "name": "v",
+                              "fill": "$ink",
+                              "content": "武功山",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "H5DC0F",
+                      "name": "Row1",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fKq7E",
+                          "name": "F 开始日期",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TK7fa",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "开始日期",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ZZjZv",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 40,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "D9Y1M",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "2026-10-01",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vG3ut",
+                          "name": "F 结束日期",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "jELXH",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "结束日期",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "OqFb4",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 40,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "niPOH",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "2026-10-04",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "a1Mwy",
+                      "name": "Row2",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "aeDVg",
+                          "name": "F 旅行人数",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "RZHi8",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "旅行人数",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "tVWpj",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 40,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "HoN6g",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "2",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "b9CLd",
+                          "name": "F 预算 (¥)",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "M8vQxh",
+                              "name": "lb",
+                              "fill": "$sub",
+                              "content": "预算 (¥)",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ozML3",
+                              "name": "Inp",
+                              "width": "fill_container",
+                              "height": 40,
+                              "fill": "$surface",
+                              "cornerRadius": 10,
+                              "stroke": "$line",
+                              "padding": [
+                                0,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "F1zku",
+                                  "name": "v",
+                                  "fill": "$ink",
+                                  "content": "3000",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "A7gjKT",
+                      "name": "CoverBlk",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Y5Odij",
+                          "name": "CvL",
+                          "width": "fill_container",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "W1GWq",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "旅行封面",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "NTKJu",
+                              "name": "s",
+                              "fill": "$faint",
+                              "content": "可选 · 默认自动生成",
+                              "fontFamily": "Inter",
+                              "fontSize": 10.5,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Gdx7C",
+                          "name": "CvR",
+                          "width": "fill_container",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "KQZ4c",
+                              "name": "Thumb",
+                              "clip": true,
+                              "width": 96,
+                              "height": 56,
+                              "fill": "#3F4C63",
+                              "cornerRadius": 8,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "aiULC",
+                                  "x": 8,
+                                  "y": 30,
+                                  "name": "d",
+                                  "fill": "#FFFFFF",
+                                  "content": "武功山",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "U6CjQr",
+                              "name": "Up",
+                              "cornerRadius": 10,
+                              "stroke": "$primary",
+                              "gap": 6,
+                              "padding": [
+                                9,
+                                14
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "i9WN0",
+                                  "name": "i",
+                                  "width": 14,
+                                  "height": 14,
+                                  "icon": "image-plus",
+                                  "library": "lucide",
+                                  "fill": "$primary"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "KChYM",
+                                  "name": "t",
+                                  "fill": "$primary",
+                                  "content": "上传封面",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12.5,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "W6ax1R",
+                  "name": "Step2 补充说明",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 18,
+                  "stroke": "$line",
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#0F172A0F",
+                    "offset": {
+                      "x": 0,
+                      "y": 4
+                    },
+                    "blur": 16
+                  },
+                  "layout": "vertical",
+                  "gap": 13,
+                  "padding": 22,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "SEcwF",
+                      "name": "S2H",
+                      "width": "fill_container",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pRr8g",
+                          "name": "t",
+                          "fill": "$ink",
+                          "content": "第 2 步 · 补充说明(全部可跳过)",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "IlNhd",
+                          "name": "Sp",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "text",
+                          "id": "YtMSV",
+                          "name": "s",
+                          "fill": "$faint",
+                          "content": "直接生成也 OK",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "cqerl",
+                      "name": "F 告诉 AI 你的偏好和约束",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jeJwu",
+                          "name": "lb",
+                          "fill": "$sub",
+                          "content": "告诉 AI 你的偏好和约束",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "s3b2Zj",
+                          "name": "Inp",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "$surface",
+                          "cornerRadius": 10,
+                          "stroke": "$line",
+                          "padding": [
+                            0,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "mDQZK",
+                              "name": "v",
+                              "fill": "$faint",
+                              "content": "喜欢小众一点,不要赶路;每天有咖啡时间;少走路…",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XZsse",
+                      "name": "Prefs",
+                      "width": "fill_container",
+                      "gap": 7,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "iOeF6",
+                          "name": "P 自然",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NycGY",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "自然",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "oqbBT",
+                          "name": "P 摄影",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "r4rrDv",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "摄影",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bMXVz",
+                          "name": "P 美食",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "mZv56",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "美食",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SzDD3",
+                          "name": "P 咖啡",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ASVLA",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "咖啡",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GDjuH",
+                          "name": "P 历史",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "D30NXJ",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "历史",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eyZcq",
+                          "name": "P 徒步",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "qKxuO",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "徒步",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Bm26Y",
+                      "name": "Constraints",
+                      "width": "fill_container",
+                      "gap": 7,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "l5uR8J",
+                          "name": "K 别太赶",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "B6qLv",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "别太赶",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cVRMI",
+                          "name": "K 少走路",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Kk5oR",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "少走路",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "FFVD3",
+                          "name": "K 每天开车 < 3h",
+                          "cornerRadius": 999,
+                          "stroke": "$line",
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "v7fyD",
+                              "name": "t",
+                              "fill": "$sub",
+                              "content": "每天开车 < 3h",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dK1w3",
+                      "name": "Gen",
+                      "width": "fill_container",
+                      "height": 46,
+                      "fill": "$primary",
+                      "cornerRadius": 12,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "vCUdY",
+                          "name": "i",
+                          "width": 15,
+                          "height": 15,
+                          "icon": "sparkles",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "text",
+                          "id": "kOWAQ",
+                          "name": "t",
+                          "fill": "#FFFFFF",
+                          "content": "AI 生成方案",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "I9pSfo",
+              "name": "NoteB",
+              "width": "fill_container",
+              "fill": "#FFFBEB",
+              "cornerRadius": 12,
+              "stroke": "#FDE68A",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pHqzZ",
+                  "name": "t",
+                  "fill": "#B45309",
+                  "content": "方案 B 要点",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "oZZ4V",
+                  "name": "b",
+                  "fill": "#92400E",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "· 4 步压成 2 步:第 2 步把原「偏好/约束/NL」三步合并为一屏(多选 chip + 自然语言),全部可跳过\n· 封面保留在第 1 步但可选,默认自动生成目的地语义封面\n· 保留表单范式,用户掌控感强;但仍是表单,转化提升有限\n· 改动面小:现有向导内部合并步骤,创建链路不动",
+                  "lineHeight": 1.6,
+                  "fontFamily": "Inter",
+                  "fontSize": 11.5,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "variables": {

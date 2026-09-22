@@ -59,6 +59,7 @@ export interface Trip {
   end_date: string | null
   travelers_count: number | null
   status: TripStatus
+  has_cover?: boolean
   created_at: string
   updated_at: string
   role?: string

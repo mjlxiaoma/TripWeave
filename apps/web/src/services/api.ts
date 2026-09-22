@@ -131,6 +131,18 @@ export const authApi = {
   me: () => api<User>('/me'),
 }
 
+// authedFetch: 二进制端点(封面)专用 —— 带鉴权与 401 单飞刷新,但不走 JSON envelope。
+async function authedFetch(path: string, init?: RequestInit, retry = true): Promise<Response> {
+  const token = getAccessToken()
+  const headers: Record<string, string> = { ...((init?.headers as Record<string, string>) ?? {}) }
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(`${BASE}${path}`, { ...init, headers })
+  if (res.status === 401 && retry && !path.startsWith('/auth/')) {
+    if (await tryRefresh()) return authedFetch(path, init, false)
+  }
+  return res
+}
+
 export const tripsApi = {
   list: () => api<Trip[]>('/trips'),
   get: (id: string) => api<Trip>('/trips/' + id),
@@ -141,4 +153,28 @@ export const tripsApi = {
   remove: (id: string) =>
     api<{ deleted: boolean }>('/trips/' + id, { method: 'DELETE' }),
   getDays: (id: string) => api<Day[]>('/trips/' + id + '/days'),
+
+  // 封面:上传(二进制 PUT,响应为 JSON envelope)/ 拉取(二进制)/ 移除
+  uploadCover: async (id: string, blob: Blob) => {
+    const res = await authedFetch(`/trips/${id}/cover`, {
+      method: 'PUT',
+      body: blob,
+      headers: { 'Content-Type': 'image/jpeg' },
+    })
+    if (!res.ok) throw new ApiError(res.status, 'COVER_UPLOAD', 'cover upload failed')
+    const env = (await res.json()) as Envelope<{ has_cover: boolean; bytes: number }>
+    return env.data
+  },
+  fetchCover: async (id: string): Promise<Blob | null> => {
+    const res = await authedFetch(`/trips/${id}/cover`)
+    if (res.status === 404) return null
+    if (!res.ok) throw new ApiError(res.status, 'COVER_LOAD', 'cover load failed')
+    return res.blob()
+  },
+  removeCover: async (id: string) => {
+    const res = await authedFetch(`/trips/${id}/cover`, { method: 'DELETE' })
+    if (!res.ok) throw new ApiError(res.status, 'COVER_DELETE', 'cover delete failed')
+    const env = (await res.json()) as Envelope<{ has_cover: boolean }>
+    return env.data
+  },
 }

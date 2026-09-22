@@ -30,6 +30,9 @@ type Trip struct {
 
 	// Role is the querying member's role; populated only by ListByUser/Get.
 	Role string `json:"-"`
+
+	// HasCover 是否上传了自定义封面(仅 ListByUser 填充;Get 用 CoverExists 查询)。
+	HasCover bool `json:"has_cover"`
 }
 
 // Preference holds per-trip planning preferences (1:1 with trip).
@@ -120,9 +123,11 @@ func statusOrDraft(s string) string {
 }
 
 // ListByUser returns all trips the user is a member of, newest first.
+// SELECT 中带 has_cover 布尔(EXISTS 子查询),不拖图片本体。
 func (r *Repository) ListByUser(ctx context.Context, userID string) ([]Trip, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT `+tripCols+`, m.role
+		SELECT `+tripCols+`, m.role,
+			EXISTS(SELECT 1 FROM trip_covers c WHERE c.trip_id = t.id) AS has_cover
 		FROM trip_members m
 		JOIN trips t ON t.id = m.trip_id
 		WHERE m.user_id = $1 AND t.status <> 'deleted'
@@ -136,7 +141,7 @@ func (r *Repository) ListByUser(ctx context.Context, userID string) ([]Trip, err
 	for rows.Next() {
 		var t Trip
 		if err := rows.Scan(&t.ID, &t.OwnerID, &t.Title, &t.Destination, &t.StartDate, &t.EndDate,
-			&t.TravelersCount, &t.Status, &t.CreatedAt, &t.UpdatedAt, &t.Role); err != nil {
+			&t.TravelersCount, &t.Status, &t.CreatedAt, &t.UpdatedAt, &t.Role, &t.HasCover); err != nil {
 			return nil, err
 		}
 		trips = append(trips, t)
@@ -359,4 +364,37 @@ func (r *Repository) GetByShareToken(ctx context.Context, token string) (*Trip, 
 		return nil, err
 	}
 	return &t, nil
+}
+
+// --- 自定义封面(trip_covers 表) ---
+
+// SaveCover upserts the trip's custom cover image (content type已由魔数嗅探校验)。
+func (r *Repository) SaveCover(ctx context.Context, tripID string, image []byte, contentType string) error {
+	_, err := r.pool.Exec(ctx, `
+		INSERT INTO trip_covers (trip_id, image, content_type)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (trip_id) DO UPDATE SET
+			image = EXCLUDED.image, content_type = EXCLUDED.content_type, updated_at = now()`,
+		tripID, image, contentType)
+	return err
+}
+
+// GetCover returns the cover image bytes + content type + 更新时间(ETag 用)。无封面即 ErrNotFound。
+func (r *Repository) GetCover(ctx context.Context, tripID string) ([]byte, string, time.Time, error) {
+	var img []byte
+	var ct string
+	var updatedAt time.Time
+	err := r.pool.QueryRow(ctx,
+		`SELECT image, content_type, updated_at FROM trip_covers WHERE trip_id = $1`, tripID).
+		Scan(&img, &ct, &updatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, "", time.Time{}, ErrNotFound
+	}
+	return img, ct, updatedAt, err
+}
+
+// DeleteCover removes the custom cover(幂等:无封面也返回成功)。
+func (r *Repository) DeleteCover(ctx context.Context, tripID string) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM trip_covers WHERE trip_id = $1`, tripID)
+	return err
 }

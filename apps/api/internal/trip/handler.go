@@ -59,6 +59,7 @@ type tripDTO struct {
 	EndDate        *string        `json:"end_date"`
 	TravelersCount *int           `json:"travelers_count"`
 	Status         string         `json:"status"`
+	HasCover       bool           `json:"has_cover"`
 	CreatedAt      time.Time      `json:"created_at"`
 	UpdatedAt      time.Time      `json:"updated_at"`
 	Role           string         `json:"role,omitempty"`
@@ -68,7 +69,7 @@ type tripDTO struct {
 func toTripDTO(t *Trip) tripDTO {
 	return tripDTO{ID: t.ID, Title: t.Title, Destination: t.Destination,
 		StartDate: t.StartDate, EndDate: t.EndDate, TravelersCount: t.TravelersCount,
-		Status: t.Status, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+		Status: t.Status, HasCover: t.HasCover, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 func toPrefDTO(p *Preference) *preferenceDTO {

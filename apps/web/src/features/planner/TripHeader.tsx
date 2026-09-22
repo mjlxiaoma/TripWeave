@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ShareDialog from '../share/ShareDialog'
+import DateQuickSet from '../trips/DateQuickSet'
+import { tripsApi } from '../../services/api'
 import type { Trip, TripStatus } from '../../types'
 
 function BackIcon() {
@@ -22,6 +24,7 @@ const STATUS_BADGE: Record<TripStatus, string> = {
 interface Props {
   trip: Trip
   onBack: () => void
+  onDatesChanged?: (updated: Trip) => void
 }
 
 function formatRange(trip: Trip): string {
@@ -37,10 +40,13 @@ function isTraveling(trip: Trip): boolean {
   return str >= trip.start_date && str <= trip.end_date
 }
 
-export default function TripHeader({ trip, onBack }: Props) {
+export default function TripHeader({ trip, onBack, onDatesChanged }: Props) {
   const { t } = useTranslation()
   const [shareOpen, setShareOpen] = useState(false)
+  const [dateAnchor, setDateAnchor] = useState<{ x: number; y: number } | null>(null)
   const traveling = isTraveling(trip)
+  const hasDates = Boolean(trip.start_date && trip.end_date)
+
   return (
     <header className="shrink-0 border-b border-slate-200 bg-white">
       <div className="flex w-full items-center gap-3 px-4 py-3">
@@ -67,6 +73,23 @@ export default function TripHeader({ trip, onBack }: Props) {
               .join(' · ')}
           </p>
         </div>
+        {/* 无日期时显示设置入口 */}
+        {!hasDates && (
+          <button
+            type="button"
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect()
+              setDateAnchor({ x: rect.left, y: rect.bottom })
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-primary-400 px-3 py-1.5 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+              <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+              <path d="M3.5 9.5h17M8 3v4M16 3v4M12 12v4M10 14h4" strokeLinecap="round" />
+            </svg>
+            {t('trips.dateSet')}
+          </button>
+        )}
         <Link
           to={`/trip/${trip.id}/today`}
           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
@@ -89,6 +112,17 @@ export default function TripHeader({ trip, onBack }: Props) {
         </span>
       </div>
       {shareOpen && <ShareDialog tripId={trip.id} onClose={() => setShareOpen(false)} />}
+      <DateQuickSet
+        anchor={dateAnchor}
+        onClose={() => setDateAnchor(null)}
+        onSave={async (start, end) => {
+          if (onDatesChanged) {
+            const updated = await tripsApi.update(trip.id, { start_date: start, end_date: end })
+            onDatesChanged(updated)
+          }
+          setDateAnchor(null)
+        }}
+      />
     </header>
   )
 }

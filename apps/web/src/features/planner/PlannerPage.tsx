@@ -159,7 +159,11 @@ export default function PlannerPage() {
   // 小屏回退为纵向堆叠 + 页面滚动。
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
-      <TripHeader trip={trip} onBack={() => navigate('/trips')} />
+      <TripHeader
+        trip={trip}
+        onBack={() => navigate('/trips')}
+        onDatesChanged={(updated) => setTrip((prev) => (prev ? { ...prev, ...updated } : prev))}
+      />
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 lg:flex-row">
         {/* 左栏:行程面板(Day 标签 + 时间轴,独立滚动) */}

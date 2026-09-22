@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ApiError, tripsApi } from '../services/api'
 import type { CreateTripPayload } from '../types'
 import { DRAFT_NL_KEY } from '../utils/draftNl'
+import { compressCover } from '../features/trips/coverImage'
 
-const STEP_KEYS = ['basic', 'prefs', 'constraints', 'extra'] as const
+const STEP_KEYS = ['basic', 'extra'] as const
 const PREF_TAG_KEYS = [
   'nature',
   'photo',
@@ -19,9 +20,12 @@ const PREF_TAG_KEYS = [
   'family',
 ] as const
 
-const BUDGET_MIN = 0
-const BUDGET_MAX = 50000
-const BUDGET_STEP = 500
+// 快捷约束 chip → 合并进自然语言(约束数值滑块从向导移除,交给 AI 对话/默认)
+const QUICK_CHIP_TEXT: Record<'relaxed' | 'lessWalk' | 'shortDrive', string> = {
+  relaxed: '节奏别太赶',
+  lessWalk: '尽量少走路',
+  shortDrive: '每天开车不超过 3 小时',
+}
 
 interface DraftState {
   destination: string
@@ -38,6 +42,7 @@ interface DraftState {
   allowHotelChange: boolean
   budgetRange: [number, number]
   extra: string
+  quickChips: string[]
 }
 
 const initialDraft: DraftState = {
@@ -55,6 +60,43 @@ const initialDraft: DraftState = {
   allowHotelChange: true,
   budgetRange: [2000, 10000],
   extra: '',
+  quickChips: [],
+}
+
+// 默认封面预览:与列表卡同源的生成插画 + 目的地名(随输入联动)
+function CoverPreview({ destination, previewUrl }: { destination: string; previewUrl: string | null }) {
+  const { t } = useTranslation()
+  if (previewUrl) {
+    return (
+      <img
+        src={previewUrl}
+        alt={t('wizard.cover')}
+        className="h-24 w-40 rounded-lg object-cover"
+      />
+    )
+  }
+  let h = 0
+  for (const ch of destination || 'trip') h = (h + ch.charCodeAt(0)) % 360
+  const gid = 'wiz-cover'
+  return (
+    <svg viewBox="0 0 160 96" className="h-24 w-40 rounded-lg" aria-hidden="true">
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={`hsl(${h}, 45%, 72%)`} />
+          <stop offset="100%" stopColor={`hsl(${h}, 50%, 42%)`} />
+        </linearGradient>
+      </defs>
+      <rect width="160" height="96" fill={`url(#${gid})`} />
+      <circle cx="118" cy="24" r="11" fill="#FFFFFF" opacity="0.85" />
+      <path d="M0 70 L30 38 L60 66 L95 30 L130 58 L160 46 V96 H0 Z" fill="#1E293B" opacity="0.35" />
+      <path d="M0 96 V78 L42 52 L88 82 L128 60 L160 74 V96 Z" fill="#0F172A" opacity="0.55" />
+      {destination.trim() && (
+        <text x="10" y="78" fill="#FFFFFF" fontSize="15" fontWeight="700" fontFamily="Inter, sans-serif">
+          {destination.trim().slice(0, 8)}
+        </text>
+      )}
+    </svg>
+  )
 }
 
 function StepIcon({ n, active, done }: { n: number; active: boolean; done: boolean }) {
@@ -99,6 +141,21 @@ export default function TripNewPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [coverFile, setCoverFile] = useState<{ blob: Blob; previewUrl: string } | null>(null)
+  const [coverError, setCoverError] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function onPickCover(file: File | undefined) {
+    if (!file) return
+    try {
+      setCoverError(false)
+      setCoverFile(await compressCover(file))
+    } catch {
+      setCoverError(true)
+    } finally {
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   // 从首页「开始规划」带过来的自然语言草稿
   useEffect(() => {
@@ -133,12 +190,22 @@ export default function TripNewPage() {
     }))
   }
 
+  const toggleQuick = (key: string) => {
+    setDraft((d) => ({
+      ...d,
+      quickChips: d.quickChips.includes(key) ? d.quickChips.filter((x) => x !== key) : [...d.quickChips, key],
+    }))
+  }
+
   function validateStep(s: number): boolean {
     const e: Record<string, string> = {}
     if (s === 0) {
       if (!draft.destination.trim()) e.destination = t('wizard.errors.destination')
-      if (!draft.startDate || !draft.endDate) e.dates = t('wizard.errors.dates')
-      else if (draft.endDate < draft.startDate) e.dates = t('wizard.errors.dateOrder')
+      // 日期可选:填则须成对且顺序正确,不填则后续在卡片/规划器里补
+      if (draft.startDate || draft.endDate) {
+        if (!draft.startDate || !draft.endDate) e.dates = t('wizard.errors.dates')
+        else if (draft.endDate < draft.startDate) e.dates = t('wizard.errors.dateOrder')
+      }
       if (draft.travelers < 1 || draft.travelers > 100) e.travelers = t('wizard.errors.travelers')
       if (draft.budget !== '' && Number(draft.budget) < 0) e.budget = t('wizard.errors.budget')
     }
@@ -156,11 +223,17 @@ export default function TripNewPage() {
     }
     setSubmitting(true)
     setSubmitError(null)
+    const extraText = [
+      draft.extra.trim(),
+      ...draft.quickChips.map((k) => QUICK_CHIP_TEXT[k as keyof typeof QUICK_CHIP_TEXT]).filter(Boolean),
+    ]
+      .filter(Boolean)
+      .join('\n')
     const payload: CreateTripPayload = {
       title: draft.destination.trim() || t('wizard.untitled'),
       destination: draft.destination.trim(),
-      start_date: draft.startDate,
-      end_date: draft.endDate,
+      start_date: draft.startDate || null,
+      end_date: draft.endDate || null,
       travelers_count: draft.travelers,
       status: saveAsDraft ? 'draft' : 'planning',
       budget: draft.budget === '' ? null : Number(draft.budget),
@@ -174,10 +247,14 @@ export default function TripNewPage() {
         budget_range: draft.budgetRange,
       },
       preferences: draft.prefTags,
-      natural_language: draft.extra.trim() || null,
+      natural_language: extraText || null,
     }
     try {
       const trip = await tripsApi.create(payload)
+      // 封面补传:best-effort,失败不阻塞进入规划器(卡片上仍可重传)
+      if (coverFile) {
+        await tripsApi.uploadCover(trip.id, coverFile.blob).catch(() => {})
+      }
       navigate(`/trip/${trip.id}`, { replace: true })
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'UNKNOWN'
@@ -290,163 +367,110 @@ export default function TripNewPage() {
               onChange={(e) => set('transport', e.target.value)}
             />
           </Field>
+
+          {/* 封面:可选,默认自动生成目的地语义封面 */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-700">{t('wizard.cover')}</span>
+              <span className="text-xs text-slate-400">{t('wizard.coverOptional')}</span>
+            </div>
+            <div className="mt-3 flex items-center gap-4">
+              <CoverPreview destination={draft.destination} previewUrl={coverFile?.previewUrl ?? null} />
+              <div className="flex flex-col gap-2">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => void onPickCover(e.target.files?.[0])}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-primary-500 px-4 py-2 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-50"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                    <path d="M4 16l4.6-6 3.4 4 3-3 5 5M4 16v3h16v-3M4 16v-9h16v9" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {coverFile ? t('wizard.coverChange') : t('wizard.coverUpload')}
+                </button>
+                {coverFile && (
+                  <button
+                    type="button"
+                    onClick={() => setCoverFile(null)}
+                    className="text-left text-xs text-slate-500 underline-offset-2 hover:text-rose-600 hover:underline"
+                  >
+                    {t('wizard.coverRemove')}
+                  </button>
+                )}
+              </div>
+            </div>
+            {coverError && <p className="mt-2 text-xs text-rose-600">{t('wizard.coverError')}</p>}
+          </div>
         </div>
       )}
 
-      {/* 步骤② 偏好标签 */}
+      {/* 步骤② 补充说明(偏好 + 约束快捷项 + 自然语言,全部可跳过) */}
       {step === 1 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="mb-5 text-sm text-slate-500">{t('wizard.prefsDesc')}</p>
-          <div className="flex flex-wrap gap-2.5">
-            {PREF_TAG_KEYS.map((key) => {
-              const on = draft.prefTags.includes(key)
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => toggleTag(key)}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                    on
-                      ? 'border-primary-600 bg-primary-50 text-primary-700'
-                      : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
-                  }`}
-                >
-                  {t(`wizard.prefTags.${key}`)}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 步骤③ 约束 */}
-      {step === 2 && (
         <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm text-slate-500">{t('wizard.constraintsDesc')}</p>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label={`${t('wizard.maxDrive')}（${t('wizard.maxDriveUnit')}）`}>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min={0}
-                  max={12}
-                  step={0.5}
-                  value={draft.maxDrive}
-                  onChange={(e) => set('maxDrive', Number(e.target.value))}
-                  className="flex-1 accent-primary-600"
-                />
-                <span className="w-14 text-right text-sm font-semibold text-slate-900">{draft.maxDrive}h</span>
-              </div>
-            </Field>
-            <Field label={`${t('wizard.maxWalk')}（${t('wizard.maxWalkUnit')}）`}>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min={0}
-                  max={30}
-                  step={1}
-                  value={draft.maxWalk}
-                  onChange={(e) => set('maxWalk', Number(e.target.value))}
-                  className="flex-1 accent-primary-600"
-                />
-                <span className="w-14 text-right text-sm font-semibold text-slate-900">{draft.maxWalk}km</span>
-              </div>
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label={t('wizard.earliest')}>
-              <input
-                type="time"
-                className={inputCls}
-                value={draft.earliest}
-                onChange={(e) => set('earliest', e.target.value)}
-              />
-            </Field>
-            <Field label={t('wizard.latest')}>
-              <input
-                type="time"
-                className={inputCls}
-                value={draft.latest}
-                onChange={(e) => set('latest', e.target.value)}
-              />
-            </Field>
-          </div>
-          <Field label={t('wizard.allowHotelChange')}>
-            <div className="flex gap-2">
-              {[true, false].map((v) => (
-                <button
-                  key={String(v)}
-                  type="button"
-                  onClick={() => set('allowHotelChange', v)}
-                  className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
-                    draft.allowHotelChange === v
-                      ? 'border-primary-600 bg-primary-50 text-primary-700'
-                      : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
-                  }`}
-                >
-                  {v ? t('wizard.allow') : t('wizard.disallow')}
-                </button>
-              ))}
-            </div>
-          </Field>
-          {/* 预算范围双滑块 */}
           <div>
-            <span className="mb-1.5 block text-sm font-medium text-slate-700">{t('wizard.budgetRange')}</span>
-            <div className="relative h-6">
-              <div className="absolute inset-y-0 my-auto h-1.5 w-full rounded-full bg-slate-200" />
-              <div
-                className="absolute inset-y-0 my-auto h-1.5 rounded-full bg-primary-500"
-                style={{
-                  left: `${((draft.budgetRange[0] - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
-                  right: `${100 - ((draft.budgetRange[1] - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100}%`,
-                }}
-              />
-              <input
-                type="range"
-                min={BUDGET_MIN}
-                max={BUDGET_MAX}
-                step={BUDGET_STEP}
-                value={draft.budgetRange[0]}
-                onChange={(e) => {
-                  const v = Math.min(Number(e.target.value), draft.budgetRange[1] - BUDGET_STEP)
-                  set('budgetRange', [v, draft.budgetRange[1]])
-                }}
-                className="dual-range"
-              />
-              <input
-                type="range"
-                min={BUDGET_MIN}
-                max={BUDGET_MAX}
-                step={BUDGET_STEP}
-                value={draft.budgetRange[1]}
-                onChange={(e) => {
-                  const v = Math.max(Number(e.target.value), draft.budgetRange[0] + BUDGET_STEP)
-                  set('budgetRange', [draft.budgetRange[0], v])
-                }}
-                className="dual-range"
-              />
-            </div>
-            <div className="mt-1 flex justify-between text-sm text-slate-600">
-              <span className="font-semibold text-slate-900">¥{draft.budgetRange[0].toLocaleString()}</span>
-              <span className="font-semibold text-slate-900">¥{draft.budgetRange[1].toLocaleString()}</span>
+            <p className="mb-3 text-sm font-medium text-slate-700">{t('wizard.prefsDesc')}</p>
+            <div className="flex flex-wrap gap-2.5">
+              {PREF_TAG_KEYS.map((key) => {
+                const on = draft.prefTags.includes(key)
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleTag(key)}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                      on
+                        ? 'border-primary-600 bg-primary-50 text-primary-700'
+                        : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
+                    }`}
+                  >
+                    {t(`wizard.prefTags.${key}`)}
+                  </button>
+                )
+              })}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* 步骤④ 自然语言补充 */}
-      {step === 3 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">{t('wizard.extraTitle')}</h2>
-          <p className="mt-1 text-sm text-slate-500">{t('wizard.extraDesc')}</p>
-          <textarea
-            rows={6}
-            className={`${inputCls} mt-4 resize-none`}
-            placeholder={t('wizard.extraPh')}
-            value={draft.extra}
-            maxLength={2000}
-            onChange={(e) => set('extra', e.target.value)}
-          />
+          <div>
+            <p className="mb-3 text-sm font-medium text-slate-700">{t('wizard.constraintsDesc')}</p>
+            <div className="flex flex-wrap gap-2.5">
+              {(['relaxed', 'lessWalk', 'shortDrive'] as const).map((key) => {
+                const on = draft.quickChips.includes(key)
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleQuick(key)}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                      on
+                        ? 'border-ai-600 bg-ai-50 text-ai-700'
+                        : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
+                    }`}
+                  >
+                    {t(`wizard.quickChips.${key}`)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-slate-700">{t('wizard.extraTitle')}</p>
+            <p className="mt-1 text-xs text-slate-500">{t('wizard.extraDesc')}</p>
+            <textarea
+              rows={5}
+              className={`${inputCls} mt-3 resize-none`}
+              placeholder={t('wizard.extraPh')}
+              value={draft.extra}
+              maxLength={2000}
+              onChange={(e) => set('extra', e.target.value)}
+            />
+          </div>
         </div>
       )}
 
