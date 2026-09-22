@@ -31,7 +31,7 @@ type Trip struct {
 	// Role is the querying member's role; populated only by ListByUser/Get.
 	Role string `json:"-"`
 
-	// HasCover 是否上传了自定义封面(仅 ListByUser 填充;Get 用 CoverExists 查询)。
+	// HasCover 是否上传了自定义封面(ListByUser 走 EXISTS 子查询;Get/Update 由 coverExists 回填)。
 	HasCover bool `json:"has_cover"`
 }
 
@@ -174,6 +174,9 @@ func (r *Repository) Get(ctx context.Context, tripID, userID string) (*Detail, e
 	if err != nil {
 		return nil, err
 	}
+	if err := r.coverExists(ctx, tripID, &t.HasCover); err != nil {
+		return nil, err
+	}
 
 	pref, err := r.getPref(ctx, tripID)
 	if err != nil {
@@ -253,6 +256,11 @@ func (r *Repository) Update(ctx context.Context, tripID string, p Patch) (*Trip,
 		return nil, nil, err
 	}
 	if err := tx.Commit(ctx); err != nil {
+		return nil, nil, err
+	}
+	// has_cover 必须回填:调用方(列表卡片)会把响应整体 merge 进本地 state,
+	// 零值 false 会把已上传封面"冲掉"(UI 消失,数据仍在)。
+	if err := r.coverExists(ctx, tripID, &t.HasCover); err != nil {
 		return nil, nil, err
 	}
 	return t, pref, nil
@@ -367,6 +375,12 @@ func (r *Repository) GetByShareToken(ctx context.Context, token string) (*Trip, 
 }
 
 // --- 自定义封面(trip_covers 表) ---
+
+// coverExists 查询封面存在性并写入 *dst;单条响应(Get/Update)的 HasCover 回填用。
+func (r *Repository) coverExists(ctx context.Context, tripID string, dst *bool) error {
+	return r.pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM trip_covers WHERE trip_id = $1)`, tripID).Scan(dst)
+}
 
 // SaveCover upserts the trip's custom cover image (content type已由魔数嗅探校验)。
 func (r *Repository) SaveCover(ctx context.Context, tripID string, image []byte, contentType string) error {
