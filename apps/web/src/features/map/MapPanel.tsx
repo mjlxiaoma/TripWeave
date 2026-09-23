@@ -128,6 +128,13 @@ export default function MapPanel({
         center: [116.397, 39.909], // 默认北京，首个点位渲染后 setFitView 覆盖
         viewMode: '2D',
       })
+      if (city.trim()) {
+        try {
+          map.setCity(city.trim())
+        } catch {
+          // ignore
+        }
+      }
       map.addControl(new AMap.Scale())
       mapRef.current = map
       infoRef.current = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -34), closeWhenClickMap: true })
@@ -147,6 +154,16 @@ export default function MapPanel({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapEnabled])
+
+  // 尚无具体行程点位时，若提供了目的地城市名，自适应定位到该城市
+  useEffect(() => {
+    if (!ready || points.length > 0 || !city.trim()) return
+    try {
+      mapRef.current?.setCity(city.trim())
+    } catch {
+      /* 静默处理 setCity 异常 */
+    }
+  }, [ready, points.length, city])
 
   // --- 点位计算：已绑定坐标直接画，未绑定的走实时搜索兜底（带缓存 + 锚过滤） ---
   // 无 cacheVersion 自增：搜索完成后直接局部 setPoints，effect 只在

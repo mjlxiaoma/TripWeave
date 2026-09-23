@@ -122,19 +122,23 @@ export default function PlannerPage() {
     }
   }, [tripId, t])
 
-  // autostart:首页「开始规划」带来的自然语言,作为第一条消息自动发送。
+  // autostart:首页「开始规划」或向导「创建旅行」带来的需求描述,作为第一条消息自动发送。
   const autostartedRef = useRef(false)
   useEffect(() => {
     if (autostartedRef.current) return
     if (searchParams.get('autostart') !== '1') return
     if (loading || !state.loaded) return
-    const nl = trip?.preference?.natural_language
-    const shouldStart = days.length === 0 && state.messages.length === 0 && nl && nl.trim()
+    const nl = trip?.preference?.natural_language?.trim()
+    const fallbackPrompt = trip?.destination?.trim()
+      ? `帮我规划去${trip.destination.trim()}的行程`
+      : ''
+    const promptToSend = nl || fallbackPrompt
+    const shouldStart = days.length === 0 && state.messages.length === 0 && Boolean(promptToSend)
     autostartedRef.current = true
     // 清掉 query,防刷新重发。
     setSearchParams({}, { replace: true })
     if (shouldStart) {
-      send(nl.trim())
+      send(promptToSend)
     }
   }, [searchParams, loading, state.loaded, state.messages.length, days.length, trip, send, setSearchParams])
 

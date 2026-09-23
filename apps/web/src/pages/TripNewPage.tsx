@@ -27,6 +27,46 @@ const QUICK_CHIP_TEXT: Record<'relaxed' | 'lessWalk' | 'shortDrive', string> = {
   shortDrive: '每天开车不超过 3 小时',
 }
 
+function buildAutoPrompt(draft: DraftState, t: (key: string, opt?: Record<string, unknown>) => string): string {
+  const parts: string[] = []
+  const dest = draft.destination.trim()
+  if (dest) {
+    parts.push(`帮我规划去${dest}的行程`)
+  }
+  if (draft.startDate && draft.endDate) {
+    const s = new Date(draft.startDate)
+    const e = new Date(draft.endDate)
+    const diff = Math.max(1, Math.round((e.getTime() - s.getTime()) / 86400000) + 1)
+    parts.push(`时间为 ${draft.startDate} 至 ${draft.endDate}（共 ${diff} 天）`)
+  }
+  if (draft.travelers > 0) {
+    parts.push(`${draft.travelers}人出行`)
+  }
+  if (draft.budget !== '') {
+    parts.push(`预算约 ${draft.budget} 元/人`)
+  }
+  if (draft.transport.trim()) {
+    parts.push(`交通方式偏好：${draft.transport.trim()}`)
+  }
+  if (draft.prefTags.length > 0) {
+    const tags = draft.prefTags
+      .map((k) => t(`wizard.prefTags.${k}`, { defaultValue: k }))
+      .join('、')
+    parts.push(`偏好：${tags}`)
+  }
+  const chips = draft.quickChips
+    .map((k) => QUICK_CHIP_TEXT[k as keyof typeof QUICK_CHIP_TEXT])
+    .filter(Boolean)
+  if (chips.length > 0) {
+    parts.push(`要求：${chips.join('、')}`)
+  }
+  if (draft.extra.trim()) {
+    parts.push(`补充需求：${draft.extra.trim()}`)
+  }
+  if (parts.length === 0) return ''
+  return parts.join('，') + '。请为我们设计合理的每日行程安排。'
+}
+
 interface DraftState {
   destination: string
   startDate: string
@@ -229,6 +269,7 @@ export default function TripNewPage() {
     ]
       .filter(Boolean)
       .join('\n')
+    const autoPrompt = buildAutoPrompt(draft, t)
     const payload: CreateTripPayload = {
       title: draft.destination.trim() || t('wizard.untitled'),
       destination: draft.destination.trim(),
@@ -247,7 +288,7 @@ export default function TripNewPage() {
         budget_range: draft.budgetRange,
       },
       preferences: draft.prefTags,
-      natural_language: extraText || null,
+      natural_language: autoPrompt || extraText || null,
     }
     try {
       const trip = await tripsApi.create(payload)
@@ -255,7 +296,9 @@ export default function TripNewPage() {
       if (coverFile) {
         await tripsApi.uploadCover(trip.id, coverFile.blob).catch(() => {})
       }
-      navigate(`/trip/${trip.id}`, { replace: true })
+      // 正常创建进入规划器时自动启动 AI 规划；保存草稿则静默进入
+      const target = saveAsDraft ? `/trip/${trip.id}` : `/trip/${trip.id}?autostart=1`
+      navigate(target, { replace: true })
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'UNKNOWN'
       setSubmitError(t(`errors.${code}`, { defaultValue: t('errors.UNKNOWN') }))
